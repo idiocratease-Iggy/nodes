@@ -42,7 +42,7 @@ class PagePhysChem(QWizardPage):
         single_layout = QVBoxLayout()
 
         comp_layout = QHBoxLayout()
-        comp_layout.addWidget(QLabel("No. components in mixture:"))
+        comp_layout.addWidget(QLabel("No. components in mixture (max. 10):"))
         self.spin_ncomp = QSpinBox()
         self.spin_ncomp.setRange(2, 10)
         self.spin_ncomp.setValue(self.model.n_components)
@@ -61,8 +61,8 @@ class PagePhysChem(QWizardPage):
         single_layout.addWidget(self.btn_plot)
 
         json_layout = QHBoxLayout()
-        self.btn_write_json = QPushButton("Write JSON data file")
-        self.btn_read_json = QPushButton("Read JSON data file")
+        self.btn_write_json = QPushButton("Save JSON single mixture data file")
+        self.btn_read_json = QPushButton("Load JSON single mixture data file")
         json_layout.addWidget(self.btn_write_json)
         json_layout.addWidget(self.btn_read_json)
         single_layout.addLayout(json_layout)
@@ -76,12 +76,13 @@ class PagePhysChem(QWizardPage):
         multi_group = QGroupBox("Explore: Multi")
         multi_layout = QVBoxLayout()
 
-        self.chk_auto = QCheckBox("Use auto PhysChem generator")
+        self.chk_auto = QCheckBox("Auto generate PhysChem data")
         self.chk_auto.setChecked(self.model.use_auto)
+        self.chk_auto.stateChanged.connect(self._toggle_matrix_buttons)
         multi_layout.addWidget(self.chk_auto)
 
         add_layout = QHBoxLayout()
-        add_layout.addWidget(QLabel("Allow addition compounds:"))
+        add_layout.addWidget(QLabel("Allow 1:1 addition compounds:"))
         self.spin_addition = QSpinBox()
         self.spin_addition.setRange(0, 5)
         self.spin_addition.setValue(self.model.allow_addition)
@@ -89,7 +90,7 @@ class PagePhysChem(QWizardPage):
         multi_layout.addLayout(add_layout)
 
         slice_layout = QHBoxLayout()
-        slice_layout.addWidget(QLabel("Max solvent volumes (slices):"))
+        slice_layout.addWidget(QLabel("Maximum solvent volumes per mixture:"))
         self.spin_slices = QSpinBox()
         self.spin_slices.setRange(1, 10)
         self.spin_slices.setValue(self.model.max_slices)
@@ -97,7 +98,7 @@ class PagePhysChem(QWizardPage):
         multi_layout.addLayout(slice_layout)
 
         mod_layout = QHBoxLayout()
-        mod_layout.addWidget(QLabel("Modulation [%]:"))
+        mod_layout.addWidget(QLabel("Stochastic Variance Factor: [%]:"))
         self.spin_modulation = QSpinBox()
         self.spin_modulation.setRange(0, 100)
         self.spin_modulation.setValue(self.model.modulation_percent)
@@ -105,7 +106,7 @@ class PagePhysChem(QWizardPage):
         multi_layout.addLayout(mod_layout)
 
         sys_layout = QHBoxLayout()
-        sys_layout.addWidget(QLabel("Number of systems:"))
+        sys_layout.addWidget(QLabel("Number of unique mixture:"))
         self.spin_systems = QSpinBox()
         self.spin_systems.setRange(1, 100)
         self.spin_systems.setValue(self.model.num_systems)
@@ -120,12 +121,12 @@ class PagePhysChem(QWizardPage):
         pd_layout.addWidget(self.spin_pd)
         multi_layout.addLayout(pd_layout)
 
-        self.btn_generate_matrix = QPushButton("Generate PhysChem matrix")
+        self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set:")
         multi_layout.addWidget(self.btn_generate_matrix)
 
         json2_layout = QHBoxLayout()
-        self.btn_write_matrix_json = QPushButton("Write matrix JSON")
-        self.btn_read_matrix_json = QPushButton("Read matrix JSON")
+        self.btn_write_matrix_json = QPushButton("Save matrix JSON")
+        self.btn_read_matrix_json = QPushButton("Load matrix JSON")
         json2_layout.addWidget(self.btn_write_matrix_json)
         json2_layout.addWidget(self.btn_read_matrix_json)
         multi_layout.addLayout(json2_layout)
@@ -237,9 +238,7 @@ class PagePhysChem(QWizardPage):
         """Placeholder to match the button wiring in __init__."""
         print("[PhysChem] Generate matrix requested.")
 
-
-import json
-import os
-
-DATA_DIR = os.path.join("data", "multxeu")
-os.makedirs(DATA_DIR, exist_ok=True)
+    def _toggle_matrix_buttons(self):
+        is_auto = self.chk_auto.isChecked()
+        self.btn_read_matrix_json.setVisible(not is_auto)
+        self.btn_write_matrix_json.setVisible(not is_auto)
