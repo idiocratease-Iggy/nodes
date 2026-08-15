@@ -24,8 +24,11 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QPalette, QColor, QIcon
 import sys
 import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def resource_path(path):
-    return path
+    return os.path.join(BASE_DIR, path)
 
 
 def main():
@@ -33,7 +36,7 @@ def main():
 
     # Load stylesheet and icon (optional)
     stylesheet_path = resource_path("styles.qss")
-    icon_path = resource_path("app_icon.ico")
+    icon_path = resource_path("nodes.ico")
 
     app.setStyle("Fusion")
 

@@ -46,6 +46,7 @@ class PagePhysChem(QWizardPage):
         self.spin_ncomp = QSpinBox()
         self.spin_ncomp.setRange(2, 10)
         self.spin_ncomp.setValue(self.model.n_components)
+        self.spin_ncomp.valueChanged.connect(self._sync_max_addition_spin)
         comp_layout.addWidget(self.spin_ncomp)
         single_layout.addLayout(comp_layout)
 
@@ -81,14 +82,6 @@ class PagePhysChem(QWizardPage):
         self.chk_auto.stateChanged.connect(self._toggle_matrix_buttons)
         multi_layout.addWidget(self.chk_auto)
 
-        add_layout = QHBoxLayout()
-        add_layout.addWidget(QLabel("Allow 1:1 addition compounds:"))
-        self.spin_addition = QSpinBox()
-        self.spin_addition.setRange(0, 5)
-        self.spin_addition.setValue(self.model.allow_addition)
-        add_layout.addWidget(self.spin_addition)
-        multi_layout.addLayout(add_layout)
-
         slice_layout = QHBoxLayout()
         slice_layout.addWidget(QLabel("Maximum solvent volumes per mixture:"))
         self.spin_slices = QSpinBox()
@@ -114,25 +107,29 @@ class PagePhysChem(QWizardPage):
         multi_layout.addLayout(sys_layout)
 
         pd_layout = QHBoxLayout()
-        pd_layout.addWidget(QLabel("PD / SVL [%]:"))
+        pd_layout.addWidget(QLabel("Maximum addition compounds:"))
         self.spin_pd = QSpinBox()
-        self.spin_pd.setRange(0, 100)
-        self.spin_pd.setValue(50)
+        max_addition_allowed = self.spin_ncomp.value() // 2
+        self.spin_pd.setRange(0, max_addition_allowed)
+        self.spin_pd.setValue(min(getattr(self.model, "max_addition", 0), max_addition_allowed))
         pd_layout.addWidget(self.spin_pd)
         multi_layout.addLayout(pd_layout)
 
-        self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set:")
+        self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set")
         multi_layout.addWidget(self.btn_generate_matrix)
 
         json2_layout = QHBoxLayout()
         self.btn_write_matrix_json = QPushButton("Save matrix JSON")
         self.btn_read_matrix_json = QPushButton("Load matrix JSON")
+        self.btn_read_matrix_json.setVisible(not self.chk_auto.isChecked())
         json2_layout.addWidget(self.btn_write_matrix_json)
         json2_layout.addWidget(self.btn_read_matrix_json)
         multi_layout.addLayout(json2_layout)
 
         multi_group.setLayout(multi_layout)
         main_layout.addWidget(multi_group)
+
+        self._toggle_matrix_buttons()
 
         self.btn_plot.clicked.connect(self.show_plot)
         self.btn_generate_matrix.clicked.connect(self.generate_matrix)
@@ -198,6 +195,7 @@ class PagePhysChem(QWizardPage):
         data = {
             "use_auto": self.chk_auto.isChecked(),
             "allow_addition": self.spin_addition.value(),
+            "max_addition": self.spin_pd.value(),
             "max_slices": self.spin_slices.value(),
             "modulation_percent": self.spin_modulation.value(),
             "num_systems": self.spin_systems.value()
@@ -221,6 +219,7 @@ class PagePhysChem(QWizardPage):
         # Update widgets
         self.chk_auto.setChecked(data.get("use_auto", True))
         self.spin_addition.setValue(data.get("allow_addition", 0))
+        self.spin_pd.setValue(data.get("max_addition", min(self.spin_pd.maximum(), getattr(self.model, "max_addition", 0))))
         self.spin_slices.setValue(data.get("max_slices", 3))
         self.spin_modulation.setValue(data.get("modulation_percent", 20))
         self.spin_systems.setValue(data.get("num_systems", 10))
@@ -228,6 +227,7 @@ class PagePhysChem(QWizardPage):
         # Update model
         self.model.use_auto = self.chk_auto.isChecked()
         self.model.allow_addition = self.spin_addition.value()
+        self.model.max_addition = self.spin_pd.value()
         self.model.max_slices = self.spin_slices.value()
         self.model.modulation_percent = self.spin_modulation.value()
         self.model.num_systems = self.spin_systems.value()
@@ -238,7 +238,15 @@ class PagePhysChem(QWizardPage):
         """Placeholder to match the button wiring in __init__."""
         print("[PhysChem] Generate matrix requested.")
 
+    def _sync_max_addition_spin(self):
+        self.model.n_components = self.spin_ncomp.value()
+        max_allowed = self.spin_ncomp.value() // 2
+        self.spin_pd.setRange(0, max_allowed)
+        if self.spin_pd.value() > max_allowed:
+            self.spin_pd.setValue(max_allowed)
+        self.model.max_addition = self.spin_pd.value()
+
     def _toggle_matrix_buttons(self):
         is_auto = self.chk_auto.isChecked()
         self.btn_read_matrix_json.setVisible(not is_auto)
-        self.btn_write_matrix_json.setVisible(not is_auto)
+        self.btn_write_matrix_json.setVisible(True)

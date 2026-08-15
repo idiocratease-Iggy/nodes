@@ -19,6 +19,7 @@ class MultXeuModel:
     # Multi-system PhysChem parameters
     use_auto: bool = True
     allow_addition: int = 0
+    max_addition: int = 0
     max_slices: int = 3
     modulation_percent: int = 20
     num_systems: int = 10

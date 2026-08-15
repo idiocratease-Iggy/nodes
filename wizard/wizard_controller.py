@@ -20,8 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from pathlib import Path
+
 from PyQt6.QtWidgets import QWizard
-from PyQt6.QtGui import QPalette
+from PyQt6.QtGui import QPalette, QIcon, QPixmap
 from PyQt6.QtCore import Qt
 from wizard.pages.page_physchem import PagePhysChem
 from wizard.pages.page_generate_matrix import PageGenerateMatrix
@@ -32,13 +34,52 @@ class WizardController(QWizard):
     def __init__(self):
         super().__init__()
 
+        icon_path = Path(__file__).resolve().parent.parent / "nodes.ico"
+        if icon_path.exists():
+            icon = QIcon(str(icon_path))
+            self.setWindowIcon(icon)
+            logo_pixmap = icon.pixmap(128, 128)
+            self.setPixmap(QWizard.WizardPixmap.LogoPixmap, logo_pixmap)
+
+        self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
+        self.setStyleSheet("""
+            QWizard {
+                background-color: #1f1f1f;
+                color: white;
+            }
+            QWizard::title {
+                color: white;
+                background: #2a2a2a;
+                font-weight: bold;
+                font-size: 22px;
+            }
+            QWizard QLabel {
+                color: white;
+                font-size: 14px;
+            }
+            QLabel, QCheckBox, QRadioButton, QSpinBox,
+            QGroupBox, QWizardPage, QAbstractButton {
+                color: white;
+            }
+            QWizard > QLabel {
+                color: white;
+            }
+        """)
+
+        palette = self.palette()
+        palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.black)
+        self.setPalette(palette)
+
         self.model = MultXeuModel()
 
         # Add pages in order
         self.addPage(PagePhysChem(self.model))
         self.addPage(PageGenerateMatrix(self.model))
 
-        self.setWindowTitle("MultXeu Wizard")
+        self.setWindowTitle("NODES")
         self.resize(900, 700)
 
 
