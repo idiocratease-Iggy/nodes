@@ -1,0 +1,49 @@
+Folder PATH listing for volume Media
+Volume serial number is 0000004D 222E:5334
+E:.
+¦   .gitignore
+¦   excel_writer.py
+¦   expanded_input_writer.py
+¦   gui_main.py
+¦   main.spec
+¦   styles.qss
+¦   test_run.py
+¦   tree.txt
+¦   
++---data
++---engine
+¦   ¦   cascade.py
+¦   ¦   eutectic_path.py
+¦   ¦   gradient.py
+¦   ¦   recovery.py
+¦   ¦   solvent_gradient.py
+¦   ¦   solvent_volume.py
+¦   ¦   xeu.py
+¦   ¦   
+¦   +---__pycache__
+¦           cascade.cpython-313.pyc
+¦           eutectic_path.cpython-313.pyc
+¦           gradient.cpython-313.pyc
+¦           purification_model.cpython-313.pyc
+¦           recovery.cpython-313.pyc
+¦           solvent_gradient.cpython-313.pyc
+¦           stability.cpython-313.pyc
+¦           xeu.cpython-313.pyc
+¦           
++---solvers
+¦   ¦   halley.py
+¦   ¦   vba.py
+¦   ¦   
+¦   +---__pycache__
+¦           halley.cpython-313.pyc
+¦           vba.cpython-313.pyc
+¦           
++---wizard
+¦   ¦   wizard_controller.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---pages
+¦           page_plate_picker.py
+¦           page_volume_levels.py
+¦           
++---XL Output (CRYSS Input Matrix)
