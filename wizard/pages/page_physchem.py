@@ -60,6 +60,8 @@ class PagePhysChem(QWizardPage):
 
         self.btn_plot = QPushButton("Plot purification profile")
         single_layout.addWidget(self.btn_plot)
+        self.btn_plot.clicked.connect(self.run_multxeu_gui)
+
 
         json_layout = QHBoxLayout()
         self.btn_write_json = QPushButton("Save JSON single mixture data file")
@@ -146,10 +148,12 @@ class PagePhysChem(QWizardPage):
     # ---------------------------------------------------------
     def show_plot(self):
         import test_run
-        fig = test_run.main()  # must return a matplotlib Figure
-        popup = PlotPopup(fig)
-        popup.show()
-        self._popup = popup
+        from gui_main import run_gui
+
+        Rmax, composition_profile, solvent_profile = test_run.main(use_vba=True)
+        self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
+
+
 
     # ---------------------------------------------------------
     # Read-Write single system JSON (wired to write_single_json)
@@ -250,3 +254,13 @@ class PagePhysChem(QWizardPage):
         is_auto = self.chk_auto.isChecked()
         self.btn_read_matrix_json.setVisible(not is_auto)
         self.btn_write_matrix_json.setVisible(True)
+
+    def run_multxeu_gui(self):
+        import test_run
+        from gui_main import run_gui
+
+        # Run solver
+        Rmax, composition_profile, solvent_profile = test_run.main()
+
+        # Launch stacked plot GUI
+        run_gui(Rmax, composition_profile, solvent_profile)

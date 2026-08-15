@@ -54,23 +54,9 @@ def print_extended_summary(matrix, comp_names):
         print(f"{R:<10.2f} | {component_str} | {m2l:>8.2f}% | {relsolvol:>10.2f}")
 
 
-def main():
+def main(use_vba: bool = True):
+    solver_choice = "vba" if use_vba else "halley"
     global Rmax, composition_profile, solvent_profile
-
-    # ------------------------------------------------------------
-    # Command line argument parsing
-    # ------------------------------------------------------------
-    parser = argparse.ArgumentParser(description="Run eutectic path simulation with different solvers.")
-    parser.add_argument("--vba", action="store_true", help="Use VBA walk-down solver")
-    parser.add_argument("--halley", action="store_true", help="Use Halley solver")
-    args = parser.parse_args()
-
-    if args.vba:
-        solver_choice = "vba"
-    elif args.halley:
-        solver_choice = "halley"
-    else:
-        parser.error("Please specify either --vba or --halley")
 
     print(f"Selected solver: {solver_choice}")
 
@@ -222,10 +208,21 @@ def main():
         composition_profile.append((R, cleaned))
         solvent_profile.append((R, solv_eng.value_at_recovery(R)))
 
-    if __name__ == "__main__":
-        from gui_main import run_gui
-        run_gui(Rmax, composition_profile, solvent_profile)
+    return Rmax, composition_profile, solvent_profile
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Run eutectic path simulation with different solvers.")
+    parser.add_argument("--vba", dest="use_vba", action="store_const", const=True, default=None,
+                        help="Use VBA walk-down solver")
+    parser.add_argument("--halley", dest="use_vba", action="store_const", const=False,
+                        help="Use Halley solver")
+    args = parser.parse_args()
+
+    if args.use_vba is None:
+        parser.error("Please specify either --vba or --halley")
+
+    Rmax, composition_profile, solvent_profile = main(use_vba=args.use_vba)
+    from gui_main import run_gui
+    run_gui(Rmax, composition_profile, solvent_profile)
+

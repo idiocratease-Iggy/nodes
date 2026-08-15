@@ -178,9 +178,9 @@ class MainWindow(QMainWindow):
 
         self.info_panel = self.InfoPanel(self.comp1_plot.plot_widget)
         self.info_panel.resize(220, 140)
-        self.info_panel.move(self.comp1_plot.plot_widget.width() - 230, 20)
         self.info_panel.raise_()
         self.info_panel.show()
+        self._position_info_panel()
 
         # -----------------------------
         # Slider for recovery
@@ -207,6 +207,25 @@ class MainWindow(QMainWindow):
         self.comp1_plot.set_cursor_position(1.0)
         self.impurity_plot.set_cursor_position(1.0)
         self.solvent_plot.set_cursor_position(1.0)
+
+    def _position_info_panel(self):
+        if not hasattr(self, "info_panel"):
+            return
+
+        plot = self.comp1_plot.plot_widget
+        panel_width = self.info_panel.width()
+        plot_width = max(plot.width(), 200)
+        x = max(10, plot_width - panel_width - 18)
+        self.info_panel.move(x, 20)
+        self.info_panel.raise_()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_info_panel()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._position_info_panel()
 
     # ---------------------------------------------------------
     # Plotting logic
@@ -280,8 +299,27 @@ class MainWindow(QMainWindow):
         
 
 
-def run_gui(Rmax, composition_profile, solvent_profile):
-    app = QApplication([])
+def run_gui(Rmax, composition_profile, solvent_profile, parent=None):
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
+        created_app = True
+    else:
+        created_app = False
+
     window = MainWindow(Rmax, composition_profile, solvent_profile)
+    window.setWindowFlags(
+        Qt.WindowType.Window
+        | Qt.WindowType.WindowCloseButtonHint
+        | Qt.WindowType.WindowMinimizeButtonHint
+        | Qt.WindowType.WindowMaximizeButtonHint
+    )
+    window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+    window.resize(960, 640)
+    window.setWindowTitle("MultXeu Purification Profile Viewer")
     window.show()
-    app.exec()
+
+    if created_app:
+        app.exec()
+
+    return window
