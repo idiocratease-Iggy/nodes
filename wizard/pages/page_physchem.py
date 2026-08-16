@@ -1,5 +1,6 @@
 ﻿import json
 import os
+from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
@@ -10,8 +11,9 @@ from PyQt6.QtCore import Qt
 from models.multxeu_model import MultXeuModel
 from input_writer import Params, build_configuration_json, write_json
 
-DATA_DIR = os.path.join(os.getcwd(), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------
@@ -137,15 +139,6 @@ class PagePhysChem(QWizardPage):
         tm_layout.addWidget(self.spin_tm_base)
         multi_layout.addLayout(tm_layout)
 
-        pd_layout = QHBoxLayout()
-        pd_layout.addWidget(QLabel("Maximum PD components:"))
-        self.spin_pd = QSpinBox()
-        max_pd_allowed = max(0, self.spin_ncomp.value() // 2)
-        self.spin_pd.setRange(0, max_pd_allowed)
-        self.spin_pd.setValue(min(getattr(self.model, "max_addition", 0), max_pd_allowed))
-        pd_layout.addWidget(self.spin_pd)
-        multi_layout.addLayout(pd_layout)
-
         rmax_layout = QHBoxLayout()
         rmax_layout.addWidget(QLabel("Include Rmax slice:"))
         self.chk_rmax_slice = QCheckBox()
@@ -162,6 +155,7 @@ class PagePhysChem(QWizardPage):
 
         self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set")
         multi_layout.addWidget(self.btn_generate_matrix)
+        self.btn_generate_matrix.clicked.connect(self.generate_matrix_data)
 
         json2_layout = QHBoxLayout()
         self.btn_write_matrix_json = QPushButton("Save matrix JSON")
@@ -189,17 +183,22 @@ class PagePhysChem(QWizardPage):
             tm_base=float(self.spin_tm_base.value()),
             tm_sd_factor=1.0,
             dh_sd_factor=1.0,
-            max_pd_components=self.spin_pd.value(),
-            pd_bias="lowest_Xc",
             max_solvent_volumes=self.spin_slices.value(),
             include_rmax_slice=self.chk_rmax_slice.isChecked(),
             notes=self.txt_notes.toPlainText()
         )
 
         json_data = build_configuration_json(params)
-        path = os.path.join(DATA_DIR, "physchem_config.json")
+        path = str(DATA_DIR / "physchem_config.json")
         write_json(path, json_data)
         print(f"[PhysChem] Wrote physchem_config.json → {path}")
+        return path
+
+    def generate_matrix_data(self):
+        config_path = self.write_multi_json()
+        if self.wizard() is not None and hasattr(self.wizard(), "page_generate_matrix"):
+            self.wizard().page_generate_matrix.generate_mixtures(config_path=config_path)
+        return config_path
 
     def _sync_max_addition_spin(self):
         self.model.n_components = self.spin_ncomp.value()
@@ -207,10 +206,7 @@ class PagePhysChem(QWizardPage):
         self.spin_addition.setRange(0, max_allowed)
         if self.spin_addition.value() > max_allowed:
             self.spin_addition.setValue(max_allowed)
-        self.spin_pd.setRange(0, max_allowed)
-        if self.spin_pd.value() > max_allowed:
-            self.spin_pd.setValue(max_allowed)
-        self.model.max_addition = self.spin_pd.value()
+        self.model.max_addition = self.spin_addition.value()
 
     def _toggle_matrix_buttons(self):
         is_auto = self.chk_auto.isChecked()

@@ -75,9 +75,12 @@ class WizardController(QWizard):
 
         self.model = MultXeuModel()
 
+        self.page_physchem = PagePhysChem(self.model)
+        self.page_generate_matrix = PageGenerateMatrix(self.model)
+
         # Add pages in order
-        self.addPage(PagePhysChem(self.model))
-        self.addPage(PageGenerateMatrix(self.model))
+        self.addPage(self.page_physchem)
+        self.addPage(self.page_generate_matrix)
 
         self.page_sizes = {
             0: (700, 620),

@@ -10,7 +10,7 @@
     "notes": ""
   },
   "physchem_rules": {
-    "tm_base": 140.0,
+    "tm_base": 130.0,
     "tm_sd_factor": 1.0,
     "dh_sd_factor": 1.0,
     "dh_correlation": "0.0714*(273+Tm)"
@@ -18,55 +18,5 @@
   "slicing": {
     "max_solvent_volumes": 3,
     "include_rmax_slice": false
-  },
-  "components": [
-    {
-      "index": 0,
-      "Xc": 0.7873153603195954,
-      "Tm": 91.41329008629666,
-      "DH": 17.887031653274395,
-      "mode": "SVL",
-      "is_addition_compound": false
-    },
-    {
-      "index": 1,
-      "Xc": 0.04850398682761965,
-      "Tm": 136.02533702838474,
-      "DH": 40.472780840227905,
-      "mode": "SVL",
-      "is_addition_compound": false
-    },
-    {
-      "index": 2,
-      "Xc": 0.03984243571884371,
-      "Tm": 123.4041836850079,
-      "DH": 33.319899134811614,
-      "mode": "SVL",
-      "is_addition_compound": true
-    },
-    {
-      "index": 3,
-      "Xc": 0.04007850727671788,
-      "Tm": 157.0401416039174,
-      "DH": 31.211025469914667,
-      "mode": "PD",
-      "is_addition_compound": false
-    },
-    {
-      "index": 4,
-      "Xc": 0.04022340770272846,
-      "Tm": 172.24549265392426,
-      "DH": 31.191784990057744,
-      "mode": "SVL",
-      "is_addition_compound": true
-    },
-    {
-      "index": 5,
-      "Xc": 0.04403630215449508,
-      "Tm": 174.56456877565142,
-      "DH": 32.674695905455486,
-      "mode": "PD",
-      "is_addition_compound": false
-    }
-  ]
+  }
 }

@@ -26,9 +26,18 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QPen, QFont
+import json
+import os
 import string
+from pathlib import Path
 
 from models.multxeu_model import MultXeuModel
+from mixture_generator import generate_mixture_set
+from input_writer import write_json
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------
@@ -253,7 +262,7 @@ class PageGenerateMatrix(QWizardPage):
         self.spin_rows.valueChanged.connect(self.update_free_preview)
         self.spin_cols.valueChanged.connect(self.update_free_preview)
 
-        self.btn_write.clicked.connect(self.generate_matrix)
+        self.btn_write.clicked.connect(self.generate_mixtures)
 
         # Default plate
         self.rb_6x4.setChecked(True)
@@ -279,26 +288,35 @@ class PageGenerateMatrix(QWizardPage):
             self.preview.set_plate(rows, cols)
 
     # ---------------------------------------------------------
-    # Generate matrix + write Excel (MultXeu logic later)
+    # Generate mixtures from physchem_config.json
     # ---------------------------------------------------------
-    def generate_matrix(self):
-        # Store new MultXeu metadata
+    def generate_mixtures(self, config_path=None):
         self.model.replicate_percent = self.spin_repl.value() if self.chk_repl.isChecked() else 0
         self.model.analytical_error_percent = self.spin_error.value() if self.chk_error.isChecked() else 0
-
-        # Store plate metadata
         self.validatePage()
 
-        print("[MultXeu] Ready to generate synthetic experimental matrix.")
-        print(f"  Replicates: {self.model.replicate_percent}%")
-        print(f"  Analytical error: ±{self.model.analytical_error_percent}%")
-        print(f"  Plate: {self.model.plate_rows} × {self.model.plate_cols}")
-        print(f"  Randomize: {self.model.randomize_design}")
-        print(f"  Fill full plates: {self.model.fill_to_full_plates}")
+        if config_path is None:
+            config_path = str(DATA_DIR / "physchem_config.json")
 
-        # TODO: integrate test_run.py, slicing, mass balance, Excel writing
+        if not os.path.exists(config_path):
+            wizard = self.wizard()
+            if wizard is not None and hasattr(wizard, "page_physchem"):
+                wizard.page_physchem.write_multi_json()
+                config_path = str(DATA_DIR / "physchem_config.json")
 
-        QMessageBox.information(self, "MultXeu", "Synthetic experimental matrix generated (placeholder).")
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"No config file found at: {config_path}")
+
+        with open(config_path, "r") as f:
+            config = json.load(f)
+
+        num = self.model.num_systems if hasattr(self.model, "num_systems") else 1
+        mixtures = generate_mixture_set(config, num)
+
+        matrix_path = str(DATA_DIR / "physchem_matrix.json")
+        write_json(matrix_path, mixtures)
+
+        print(f"[Matrix] Wrote {num} mixtures → {matrix_path}")
 
     # ---------------------------------------------------------
     # Save plate metadata into model (unchanged)

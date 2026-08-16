@@ -1,0 +1,732 @@
+[
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.7901106944098112,
+        "Tm": 184.41542110180555,
+        "DH": 21.690519556962474,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04355031007870644,
+        "Tm": 111.96719005407687,
+        "DH": 32.69295304501156,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 2,
+        "Xc": 0.03755660672048855,
+        "Tm": 112.49914367593455,
+        "DH": 28.129948600393345,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.04427531008612444,
+        "Tm": 131.92972756769825,
+        "DH": 22.350237496584626,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.04785500321922742,
+        "Tm": 103.39495334847585,
+        "DH": 40.89466551904807,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 5,
+        "Xc": 0.03665207548564194,
+        "Tm": 135.78013452295386,
+        "DH": 28.67769408932302,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_001"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.8009319046005889,
+        "Tm": 86.4147265570245,
+        "DH": 28.849322221029396,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04022304970129038,
+        "Tm": 108.41308704691195,
+        "DH": 35.71295102248689,
+        "mode": "PD",
+        "is_addition_compound": true
+      },
+      {
+        "index": 2,
+        "Xc": 0.03032210275786056,
+        "Tm": 99.98052990096117,
+        "DH": 32.90448212022555,
+        "mode": "PD",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.040116282184494985,
+        "Tm": 132.16719160433928,
+        "DH": 28.014640265160637,
+        "mode": "PD",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.041820655713014354,
+        "Tm": 149.67072261894742,
+        "DH": 26.55954642467538,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 5,
+        "Xc": 0.0465860050427508,
+        "Tm": 82.79193149635235,
+        "DH": 29.349501171466322,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_002"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.792138651882613,
+        "Tm": 59.33420667879113,
+        "DH": 23.4635111876382,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04942547861136845,
+        "Tm": 161.12927430836396,
+        "DH": 28.731909308620747,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 2,
+        "Xc": 0.054120861439675795,
+        "Tm": 116.6035270490918,
+        "DH": 38.55771507658184,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.04391009580125817,
+        "Tm": 117.41424873829129,
+        "DH": 17.105745863267995,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.03552302284989657,
+        "Tm": 98.73874051682434,
+        "DH": 32.32857207366088,
+        "mode": "PD",
+        "is_addition_compound": true
+      },
+      {
+        "index": 5,
+        "Xc": 0.024881889415188044,
+        "Tm": 113.75125635765883,
+        "DH": 21.324658324279767,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_003"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.8090827771311809,
+        "Tm": 123.69631887505957,
+        "DH": 22.944790402681562,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04300903089093145,
+        "Tm": 124.7822219885079,
+        "DH": 28.97495795871376,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 2,
+        "Xc": 0.03650671053189329,
+        "Tm": 143.2461637587647,
+        "DH": 26.634172159714886,
+        "mode": "PD",
+        "is_addition_compound": false
+      },
+      {
+        "index": 3,
+        "Xc": 0.03251742622857019,
+        "Tm": 141.17499885593708,
+        "DH": 29.034621501982894,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.042914913992233246,
+        "Tm": 165.48504506323383,
+        "DH": 34.419044131520295,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 5,
+        "Xc": 0.03596914122519102,
+        "Tm": 185.01645378307802,
+        "DH": 41.015730081587826,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_004"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.7884963421378184,
+        "Tm": 102.0440571363686,
+        "DH": 18.997253390165866,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04611383405209171,
+        "Tm": 95.1057416294337,
+        "DH": 24.182669913700447,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 2,
+        "Xc": 0.036499835013967336,
+        "Tm": 122.90665415867272,
+        "DH": 30.14733644608968,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.04567849021423576,
+        "Tm": 122.67227707329684,
+        "DH": 30.257139140401364,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.04286585134992393,
+        "Tm": 115.46774041053564,
+        "DH": 34.28154179592218,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 5,
+        "Xc": 0.04034564723196291,
+        "Tm": 114.77663348053383,
+        "DH": 35.586583864655424,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_005"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.8135412791779426,
+        "Tm": 167.63574190096733,
+        "DH": 31.472451744250666,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.05600024790436133,
+        "Tm": 141.58540502402911,
+        "DH": 39.64317858267634,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 2,
+        "Xc": 0.04049897888450709,
+        "Tm": 149.2193767681511,
+        "DH": 31.037398033775794,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.021289687950332405,
+        "Tm": 98.1738989246613,
+        "DH": 27.926052996786645,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.022835506312890566,
+        "Tm": 160.5338203978078,
+        "DH": 26.43335679005184,
+        "mode": "PD",
+        "is_addition_compound": false
+      },
+      {
+        "index": 5,
+        "Xc": 0.04583429976996588,
+        "Tm": 102.77473361435594,
+        "DH": 29.08441639837906,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_006"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.7813130756706762,
+        "Tm": 136.57890934583745,
+        "DH": 28.635515945020792,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.046759940957500905,
+        "Tm": 104.86019003128669,
+        "DH": 22.478677063028492,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 2,
+        "Xc": 0.03770084442299433,
+        "Tm": 131.2436379690871,
+        "DH": 17.860601104417082,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 3,
+        "Xc": 0.05685282053260347,
+        "Tm": 109.51512340476185,
+        "DH": 22.002489569887317,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 4,
+        "Xc": 0.037641137672776,
+        "Tm": 103.55601388828433,
+        "DH": 27.41470283340535,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 5,
+        "Xc": 0.039732180743449,
+        "Tm": 123.47994627466306,
+        "DH": 24.714146300586233,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_007"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.7937179951448653,
+        "Tm": 144.6169135634981,
+        "DH": 28.796060679423316,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.032388670224726405,
+        "Tm": 134.7155724613008,
+        "DH": 27.200266601725065,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 2,
+        "Xc": 0.037395172519515116,
+        "Tm": 113.01273348847012,
+        "DH": 21.67123430372213,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.05472883733633547,
+        "Tm": 151.77830371393284,
+        "DH": 38.00599995804789,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 4,
+        "Xc": 0.04317076110502199,
+        "Tm": 170.64706511613062,
+        "DH": 27.952223593581127,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 5,
+        "Xc": 0.038598563669535686,
+        "Tm": 107.60007755813469,
+        "DH": 24.28604003153434,
+        "mode": "PD",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_008"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.7919613214045432,
+        "Tm": 132.0857086134844,
+        "DH": 23.172898821825473,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.04236454896930392,
+        "Tm": 143.91210508279525,
+        "DH": 42.67711364624834,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 2,
+        "Xc": 0.03139424818563305,
+        "Tm": 131.1485335251215,
+        "DH": 36.10292689838272,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.0398367713740893,
+        "Tm": 114.94580860992185,
+        "DH": 24.099246860523714,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.039470381775308275,
+        "Tm": 125.02713912547597,
+        "DH": 24.507199008433325,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 5,
+        "Xc": 0.05497272829112217,
+        "Tm": 94.92184877512564,
+        "DH": 34.81087264503334,
+        "mode": "SVL",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_009"
+  },
+  {
+    "config_id": "260816",
+    "metadata": {
+      "n_components": 6,
+      "main_component_index": 0,
+      "main_component_level": 0.8,
+      "stochastic_variance": 0.2,
+      "max_addition_compounds": 2,
+      "degeneracy_enabled": false,
+      "notes": ""
+    },
+    "physchem_rules": {
+      "tm_base": 130.0,
+      "tm_sd_factor": 1.0,
+      "dh_sd_factor": 1.0,
+      "dh_correlation": "0.0714*(273+Tm)"
+    },
+    "slicing": {
+      "max_solvent_volumes": 3,
+      "include_rmax_slice": false
+    },
+    "components": [
+      {
+        "index": 0,
+        "Xc": 0.8023573157280911,
+        "Tm": 135.24118459453516,
+        "DH": 26.427514120622927,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 1,
+        "Xc": 0.037842287669410966,
+        "Tm": 130.413638433463,
+        "DH": 27.959941859332464,
+        "mode": "PD",
+        "is_addition_compound": true
+      },
+      {
+        "index": 2,
+        "Xc": 0.031614397348659326,
+        "Tm": 134.3516176798625,
+        "DH": 31.99993859792802,
+        "mode": "SVL",
+        "is_addition_compound": true
+      },
+      {
+        "index": 3,
+        "Xc": 0.04731829436834113,
+        "Tm": 134.66569920979694,
+        "DH": 34.633732803653594,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 4,
+        "Xc": 0.050062648405277806,
+        "Tm": 147.79111323871263,
+        "DH": 40.53747401945768,
+        "mode": "SVL",
+        "is_addition_compound": false
+      },
+      {
+        "index": 5,
+        "Xc": 0.030805056480219643,
+        "Tm": 119.59314987959691,
+        "DH": 32.11233739712638,
+        "mode": "PD",
+        "is_addition_compound": false
+      }
+    ],
+    "mixture_id": "260816_010"
+  }
+]
