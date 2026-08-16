@@ -124,12 +124,15 @@ class PageGenerateMatrix(QWizardPage):
 
         left_panel = QWidget()
         left_panel.setLayout(left_layout)
-        left_panel.setFixedWidth(640)
+        left_panel.setFixedWidth(620)
         main_layout.addWidget(left_panel, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        # Plate format group (unchanged)
+        # Plate format group with preview nested inside the box
         format_group = QGroupBox("Plate Format")
-        format_layout = QVBoxLayout()
+        format_layout = QHBoxLayout()
+        format_layout.setContentsMargins(10, 10, 10, 10)
+
+        left_column = QVBoxLayout()
 
         self.rb_4x3 = QRadioButton("4 × 3 (12 wells)")
         self.rb_3x5 = QRadioButton("3 × 5 (15 wells)")
@@ -156,13 +159,26 @@ class PageGenerateMatrix(QWizardPage):
         free_layout.addWidget(QLabel("Cols:"))
         free_layout.addWidget(self.spin_cols)
 
-        format_layout.addWidget(self.rb_4x3)
-        format_layout.addWidget(self.rb_3x5)
-        format_layout.addWidget(self.rb_6x4)
-        format_layout.addWidget(self.rb_8x6)
-        format_layout.addWidget(self.rb_12x8)
-        format_layout.addWidget(self.rb_free)
-        format_layout.addLayout(free_layout)
+        left_column.addWidget(self.rb_4x3)
+        left_column.addWidget(self.rb_3x5)
+        left_column.addWidget(self.rb_6x4)
+        left_column.addWidget(self.rb_8x6)
+        left_column.addWidget(self.rb_12x8)
+        left_column.addWidget(self.rb_free)
+        left_column.addLayout(free_layout)
+
+        preview_container = QWidget()
+        preview_layout = QVBoxLayout(preview_container)
+        preview_layout.setContentsMargins(0, 0, 0, 0)
+        preview_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.preview = PlatePreview()
+        self.preview.setMinimumSize(320, 300)
+        self.preview.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        preview_layout.addWidget(self.preview)
+
+        format_layout.addLayout(left_column)
+        format_layout.addWidget(preview_container, alignment=Qt.AlignmentFlag.AlignRight)
 
         format_group.setLayout(format_layout)
         left_layout.addWidget(format_group)
@@ -172,8 +188,8 @@ class PageGenerateMatrix(QWizardPage):
         # -----------------------------------------------------
         options_group = QGroupBox("Experimental Options")
         options_layout = QVBoxLayout()
-        self.chk_randomize = QCheckBox("Randomize experiment order across reactors")
-        self.checkbox_fill_full = QCheckBox("Fill up to full plates")
+        self.chk_randomize = QCheckBox("Randomize order")
+        self.checkbox_fill_full = QCheckBox("Fill plates")
         options_layout.addWidget(self.chk_randomize)
         options_layout.addWidget(self.checkbox_fill_full)
         options_group.setLayout(options_layout)
@@ -188,7 +204,7 @@ class PageGenerateMatrix(QWizardPage):
         repl_group = QGroupBox("Replicates")
         repl_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         repl_layout = QVBoxLayout()
-        self.chk_repl = QCheckBox("Include replicates")
+        self.chk_repl = QCheckBox("Incl. replicates")
         self.spin_repl = QSpinBox()
         self.spin_repl.setRange(0, 100)
         self.spin_repl.setValue(0)
@@ -199,10 +215,10 @@ class PageGenerateMatrix(QWizardPage):
         repl_group.setMaximumHeight(150)
 
         # Analytical Error group
-        err_group = QGroupBox("Analytical Error")
+        err_group = QGroupBox("Experimental Error")
         err_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         err_layout = QVBoxLayout()
-        self.chk_error = QCheckBox("Include analytical error")
+        self.chk_error = QCheckBox("Incl. noise")
         self.spin_error = QSpinBox()
         self.spin_error.setRange(1, 10)
         self.spin_error.setValue(5)
@@ -223,14 +239,6 @@ class PageGenerateMatrix(QWizardPage):
         meta_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         left_layout.addLayout(meta_layout)
-
-        # -----------------------------------------------------
-        # RIGHT SIDE — Plate preview (unchanged)
-        # -----------------------------------------------------
-        self.preview = PlatePreview()
-        self.preview.setMinimumSize(420, 420)
-        self.preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        main_layout.addWidget(self.preview)
 
         # -----------------------------------------------------
         # SIGNALS (unchanged + new ones)
