@@ -1,19 +1,25 @@
-import json
+﻿import json
 import os
 
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
-    QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy
+    QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy, QTextEdit
 )
 from PyQt6.QtCore import Qt
 
 from models.multxeu_model import MultXeuModel
+from input_writer import Params, build_configuration_json, write_json
+
+DATA_DIR = os.path.join(os.getcwd(), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
 
 
 # ---------------------------------------------------------
 # Optional: Stacked plot popup (wired later)
 # ---------------------------------------------------------
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+
 class PlotPopup(QWidget):
     def __init__(self, fig, parent=None):
         super().__init__(parent)
@@ -52,16 +58,15 @@ class PagePhysChem(QWizardPage):
 
         main_layout2 = QHBoxLayout()
         main_layout2.addWidget(QLabel("Main component level [%]:"))
-        self.spin_main = QSpinBox()
-        self.spin_main.setRange(50, 99)
-        self.spin_main.setValue(self.model.main_component_level)
-        main_layout2.addWidget(self.spin_main)
+        self.spin_main_level = QSpinBox()
+        self.spin_main_level.setRange(0, 100)
+        self.spin_main_level.setValue(self.model.main_component_level)
+        main_layout2.addWidget(self.spin_main_level)
         single_layout.addLayout(main_layout2)
 
         self.btn_plot = QPushButton("Plot purification profile")
         single_layout.addWidget(self.btn_plot)
-        self.btn_plot.clicked.connect(self.run_multxeu_gui)
-
+        self.btn_plot.clicked.connect(self.show_plot)
 
         json_layout = QHBoxLayout()
         self.btn_write_json = QPushButton("Save JSON single mixture data file")
@@ -92,13 +97,13 @@ class PagePhysChem(QWizardPage):
         slice_layout.addWidget(self.spin_slices)
         multi_layout.addLayout(slice_layout)
 
-        mod_layout = QHBoxLayout()
-        mod_layout.addWidget(QLabel("Stochastic Variance Factor: [%]:"))
-        self.spin_modulation = QSpinBox()
-        self.spin_modulation.setRange(0, 100)
-        self.spin_modulation.setValue(self.model.modulation_percent)
-        mod_layout.addWidget(self.spin_modulation)
-        multi_layout.addLayout(mod_layout)
+        variance_layout = QHBoxLayout()
+        variance_layout.addWidget(QLabel("Stochastic Variance Factor [%]:"))
+        self.spin_variance = QSpinBox()
+        self.spin_variance.setRange(0, 100)
+        self.spin_variance.setValue(self.model.modulation_percent)
+        variance_layout.addWidget(self.spin_variance)
+        multi_layout.addLayout(variance_layout)
 
         sys_layout = QHBoxLayout()
         sys_layout.addWidget(QLabel("Number of unique mixture:"))
@@ -108,14 +113,52 @@ class PagePhysChem(QWizardPage):
         sys_layout.addWidget(self.spin_systems)
         multi_layout.addLayout(sys_layout)
 
+        addition_layout = QHBoxLayout()
+        addition_layout.addWidget(QLabel("Maximum addition compounds:"))
+        self.spin_addition = QSpinBox()
+        max_addition_allowed = max(0, self.spin_ncomp.value() // 2)
+        self.spin_addition.setRange(0, max_addition_allowed)
+        self.spin_addition.setValue(min(getattr(self.model, "max_addition", 0), max_addition_allowed))
+        addition_layout.addWidget(self.spin_addition)
+        multi_layout.addLayout(addition_layout)
+
+        degeneracy_layout = QHBoxLayout()
+        degeneracy_layout.addWidget(QLabel("Degeneracy enabled:"))
+        self.chk_degeneracy = QCheckBox()
+        self.chk_degeneracy.setChecked(False)
+        degeneracy_layout.addWidget(self.chk_degeneracy)
+        multi_layout.addLayout(degeneracy_layout)
+
+        tm_layout = QHBoxLayout()
+        tm_layout.addWidget(QLabel("Base melting point:"))
+        self.spin_tm_base = QSpinBox()
+        self.spin_tm_base.setRange(0, 500)
+        self.spin_tm_base.setValue(130)
+        tm_layout.addWidget(self.spin_tm_base)
+        multi_layout.addLayout(tm_layout)
+
         pd_layout = QHBoxLayout()
-        pd_layout.addWidget(QLabel("Maximum addition compounds:"))
+        pd_layout.addWidget(QLabel("Maximum PD components:"))
         self.spin_pd = QSpinBox()
-        max_addition_allowed = self.spin_ncomp.value() // 2
-        self.spin_pd.setRange(0, max_addition_allowed)
-        self.spin_pd.setValue(min(getattr(self.model, "max_addition", 0), max_addition_allowed))
+        max_pd_allowed = max(0, self.spin_ncomp.value() // 2)
+        self.spin_pd.setRange(0, max_pd_allowed)
+        self.spin_pd.setValue(min(getattr(self.model, "max_addition", 0), max_pd_allowed))
         pd_layout.addWidget(self.spin_pd)
         multi_layout.addLayout(pd_layout)
+
+        rmax_layout = QHBoxLayout()
+        rmax_layout.addWidget(QLabel("Include Rmax slice:"))
+        self.chk_rmax_slice = QCheckBox()
+        self.chk_rmax_slice.setChecked(False)
+        rmax_layout.addWidget(self.chk_rmax_slice)
+        multi_layout.addLayout(rmax_layout)
+
+        notes_layout = QHBoxLayout()
+        notes_layout.addWidget(QLabel("Notes:"))
+        self.txt_notes = QTextEdit()
+        self.txt_notes.setPlaceholderText("Optional notes")
+        notes_layout.addWidget(self.txt_notes)
+        multi_layout.addLayout(notes_layout)
 
         self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set")
         multi_layout.addWidget(self.btn_generate_matrix)
@@ -133,118 +176,37 @@ class PagePhysChem(QWizardPage):
 
         self._toggle_matrix_buttons()
 
-        self.btn_plot.clicked.connect(self.show_plot)
-        self.btn_generate_matrix.clicked.connect(self.generate_matrix)
-        self.btn_write_json.clicked.connect(self.write_single_json)
-        self.btn_read_json.clicked.connect(self.read_single_json)
         self.btn_write_matrix_json.clicked.connect(self.write_multi_json)
-        self.btn_read_matrix_json.clicked.connect(self.read_multi_json)
-
-
-
-
-    # ---------------------------------------------------------
-    # Show stacked plot popup (wired to test_run.py)
-    # ---------------------------------------------------------
-    def show_plot(self):
-        import test_run
-        from gui_main import run_gui
-
-        Rmax, composition_profile, solvent_profile = test_run.main(use_vba=True)
-        self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
-
-
-
-    # ---------------------------------------------------------
-    # Read-Write single system JSON (wired to write_single_json)
-    # ---------------------------------------------------------
-    
-    def write_single_json(self):
-        data = {
-            "n_components": self.spin_ncomp.value(),
-            "main_component_level": self.spin_main.value()
-        }
-
-        path = os.path.join(DATA_DIR, "single_system.json")
-        with open(path, "w") as f:
-            json.dump(data, f, indent=4)
-
-        print(f"[PhysChem] Wrote single_system.json → {path}")
-
-    def read_single_json(self):
-        path = os.path.join(DATA_DIR, "single_system.json")
-        if not os.path.exists(path):
-            print("[PhysChem] single_system.json not found.")
-            return
-
-        with open(path, "r") as f:
-            data = json.load(f)
-
-        # Update widgets
-        self.spin_ncomp.setValue(data.get("n_components", 4))
-        self.spin_main.setValue(data.get("main_component_level", 80))
-
-        # Update model
-        self.model.n_components = self.spin_ncomp.value()
-        self.model.main_component_level = self.spin_main.value()
-
-        print(f"[PhysChem] Loaded single_system.json ← {path}")
-
-
-    # ---------------------------------------------------------
-    # Read-Write multi system JSON (wired to write_multi_json)
-    # ---------------------------------------------------------
 
     def write_multi_json(self):
-        data = {
-            "use_auto": self.chk_auto.isChecked(),
-            "allow_addition": self.spin_addition.value(),
-            "max_addition": self.spin_pd.value(),
-            "max_slices": self.spin_slices.value(),
-            "modulation_percent": self.spin_modulation.value(),
-            "num_systems": self.spin_systems.value()
-        }
+        params = Params(
+            n_components=self.spin_ncomp.value(),
+            main_component_index=0,
+            main_component_level=self.spin_main_level.value() / 100.0,
+            stochastic_variance=self.spin_variance.value() / 100.0,
+            max_addition_compounds=self.spin_addition.value(),
+            degeneracy_enabled=self.chk_degeneracy.isChecked(),
+            tm_base=float(self.spin_tm_base.value()),
+            tm_sd_factor=1.0,
+            dh_sd_factor=1.0,
+            max_pd_components=self.spin_pd.value(),
+            pd_bias="lowest_Xc",
+            max_solvent_volumes=self.spin_slices.value(),
+            include_rmax_slice=self.chk_rmax_slice.isChecked(),
+            notes=self.txt_notes.toPlainText()
+        )
 
-        path = os.path.join(DATA_DIR, "physchem_matrix.json")
-        with open(path, "w") as f:
-            json.dump(data, f, indent=4)
-
-        print(f"[PhysChem] Wrote physchem_matrix.json → {path}")
-
-    def read_multi_json(self):
-        path = os.path.join(DATA_DIR, "physchem_matrix.json")
-        if not os.path.exists(path):
-            print("[PhysChem] physchem_matrix.json not found.")
-            return
-
-        with open(path, "r") as f:
-            data = json.load(f)
-
-        # Update widgets
-        self.chk_auto.setChecked(data.get("use_auto", True))
-        self.spin_addition.setValue(data.get("allow_addition", 0))
-        self.spin_pd.setValue(data.get("max_addition", min(self.spin_pd.maximum(), getattr(self.model, "max_addition", 0))))
-        self.spin_slices.setValue(data.get("max_slices", 3))
-        self.spin_modulation.setValue(data.get("modulation_percent", 20))
-        self.spin_systems.setValue(data.get("num_systems", 10))
-
-        # Update model
-        self.model.use_auto = self.chk_auto.isChecked()
-        self.model.allow_addition = self.spin_addition.value()
-        self.model.max_addition = self.spin_pd.value()
-        self.model.max_slices = self.spin_slices.value()
-        self.model.modulation_percent = self.spin_modulation.value()
-        self.model.num_systems = self.spin_systems.value()
-
-        print(f"[PhysChem] Loaded physchem_matrix.json ← {path}")
-
-    def generate_matrix(self):
-        """Placeholder to match the button wiring in __init__."""
-        print("[PhysChem] Generate matrix requested.")
+        json_data = build_configuration_json(params)
+        path = os.path.join(DATA_DIR, "physchem_config.json")
+        write_json(path, json_data)
+        print(f"[PhysChem] Wrote physchem_config.json → {path}")
 
     def _sync_max_addition_spin(self):
         self.model.n_components = self.spin_ncomp.value()
-        max_allowed = self.spin_ncomp.value() // 2
+        max_allowed = max(0, self.spin_ncomp.value() // 2)
+        self.spin_addition.setRange(0, max_allowed)
+        if self.spin_addition.value() > max_allowed:
+            self.spin_addition.setValue(max_allowed)
         self.spin_pd.setRange(0, max_allowed)
         if self.spin_pd.value() > max_allowed:
             self.spin_pd.setValue(max_allowed)
@@ -255,12 +217,16 @@ class PagePhysChem(QWizardPage):
         self.btn_read_matrix_json.setVisible(not is_auto)
         self.btn_write_matrix_json.setVisible(True)
 
+    def show_plot(self):
+        import test_run
+        from gui_main import run_gui
+
+        Rmax, composition_profile, solvent_profile = test_run.main(use_vba=True)
+        self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
+
     def run_multxeu_gui(self):
         import test_run
         from gui_main import run_gui
 
-        # Run solver
         Rmax, composition_profile, solvent_profile = test_run.main()
-
-        # Launch stacked plot GUI
         run_gui(Rmax, composition_profile, solvent_profile)
