@@ -118,7 +118,14 @@ class PageGenerateMatrix(QWizardPage):
         # LEFT SIDE — Plate format + new MultXeu controls
         # -----------------------------------------------------
         left_layout = QVBoxLayout()
-        main_layout.addLayout(left_layout)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(10)
+        left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        left_panel = QWidget()
+        left_panel.setLayout(left_layout)
+        left_panel.setFixedWidth(640)
+        main_layout.addWidget(left_panel, alignment=Qt.AlignmentFlag.AlignLeft)
 
         # Plate format group (unchanged)
         format_group = QGroupBox("Plate Format")
@@ -160,21 +167,22 @@ class PageGenerateMatrix(QWizardPage):
         format_group.setLayout(format_layout)
         left_layout.addWidget(format_group)
 
-        # Randomization + fill-to-full-plates (unchanged)
+        # -----------------------------------------------------
+        # Lower options: matrix behavior, replicates, and analytical error
+        # -----------------------------------------------------
+        options_group = QGroupBox("Experimental Options")
+        options_layout = QVBoxLayout()
         self.chk_randomize = QCheckBox("Randomize experiment order across reactors")
-        left_layout.addWidget(self.chk_randomize)
-
         self.checkbox_fill_full = QCheckBox("Fill up to full plates")
-        left_layout.addWidget(self.checkbox_fill_full)
+        options_layout.addWidget(self.chk_randomize)
+        options_layout.addWidget(self.checkbox_fill_full)
+        options_group.setLayout(options_layout)
+        options_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        options_group.setMaximumHeight(150)
 
-        # -----------------------------------------------------
-        # NEW: Replicates + Analytical Error side-by-side
-        # -----------------------------------------------------
         meta_layout = QHBoxLayout()
-
-       
-        
-
+        meta_layout.setContentsMargins(0, 0, 0, 0)
+        meta_layout.setSpacing(12)
 
         # Replicates group
         repl_group = QGroupBox("Replicates")
@@ -188,10 +196,7 @@ class PageGenerateMatrix(QWizardPage):
         repl_layout.addWidget(QLabel("Replicate %:"))
         repl_layout.addWidget(self.spin_repl)
         repl_group.setLayout(repl_layout)
-        repl_group.setMaximumHeight(140)
-
-      
-
+        repl_group.setMaximumHeight(150)
 
         # Analytical Error group
         err_group = QGroupBox("Analytical Error")
@@ -205,30 +210,27 @@ class PageGenerateMatrix(QWizardPage):
         err_layout.addWidget(QLabel("Error ± [%]:"))
         err_layout.addWidget(self.spin_error)
         err_group.setLayout(err_layout)
-        err_group.setMaximumHeight(140)
+        err_group.setMaximumHeight(150)
 
-
-
-        # Add both groups side-by-side
+        # Keep the cluster aligned to the left edge while preserving the internal horizontal layout
+        meta_layout.addWidget(options_group)
         meta_layout.addWidget(repl_group)
         meta_layout.addWidget(err_group)
 
-        left_layout.addLayout(meta_layout)
+        self.btn_write = QPushButton("Write Excel File")
+        self.btn_write.setMinimumWidth(150)
+        meta_layout.addWidget(self.btn_write)
+        meta_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
+        left_layout.addLayout(meta_layout)
 
         # -----------------------------------------------------
         # RIGHT SIDE — Plate preview (unchanged)
         # -----------------------------------------------------
         self.preview = PlatePreview()
-        self.preview.setMinimumSize(600, 600)
+        self.preview.setMinimumSize(420, 420)
         self.preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         main_layout.addWidget(self.preview)
-
-        # -----------------------------------------------------
-        # Write Excel button (moved to bottom-right)
-        # -----------------------------------------------------
-        self.btn_write = QPushButton("Write Excel File")
-        main_layout.addWidget(self.btn_write, alignment=Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight)
 
         # -----------------------------------------------------
         # SIGNALS (unchanged + new ones)

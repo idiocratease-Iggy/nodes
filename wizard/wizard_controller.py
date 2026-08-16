@@ -79,8 +79,18 @@ class WizardController(QWizard):
         self.addPage(PagePhysChem(self.model))
         self.addPage(PageGenerateMatrix(self.model))
 
+        self.page_sizes = {
+            0: (700, 620),
+            1: (720, 620),
+        }
+
         self.setWindowTitle("NODES")
-        self.resize(900, 700)
+        self.currentIdChanged.connect(self._apply_page_size)
+        self._apply_page_size(self.currentId())
+
+    def _apply_page_size(self, page_id):
+        width, height = self.page_sizes.get(page_id, (700, 620))
+        self.resize(width, height)
 
 
 
