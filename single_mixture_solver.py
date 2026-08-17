@@ -1,6 +1,5 @@
-﻿# test_run.py
-import argparse
-import re
+﻿import re
+
 from engine.eutectic_path import eutectic_path
 from engine.gradient import GradientEngine
 from engine.solvent_gradient import SolventGradientEngine
@@ -8,27 +7,14 @@ from mixture_input import MixtureInput
 
 
 # ------------------------------------------------------------
-# Explicit mixture data (your reference dataset)
+# Default / compatibility dataset
 # ------------------------------------------------------------
 T = [95.52, 70, 45.36, 84.66, 53]
 DH = [7.3300, 20.3300, 26.0500, 6.9800, 12.0800]
 X = [0.80, 0.027, 0.086, 0.007, 0.080]
 modes = ["SVL", "PD", "SVL", "SVL", "SVL"]
 
-mix = MixtureInput(
-    T=T,
-    DH=DH,
-    X=X,
-    modes=modes,
-)
 
-if len(X) > 10:
-    raise ValueError("This pipeline supports a maximum of 10 components.")
-
-
-# ------------------------------------------------------------
-# Helper Functions
-# ------------------------------------------------------------
 def to_frac(x):
     """Convert string percent or numeric to fraction."""
     if isinstance(x, str) and x.endswith('%'):
@@ -54,23 +40,13 @@ def print_extended_summary(matrix, comp_names):
         print(f"{R:<10.2f} | {component_str} | {m2l:>8.2f}% | {relsolvol:>10.2f}")
 
 
-def main(use_vba: bool = True):
+def _solve_mixture(mix, use_vba: bool = True):
     solver_choice = "vba" if use_vba else "halley"
-    global Rmax, composition_profile, solvent_profile
 
-    print(f"Selected solver: {solver_choice}")
-
-    # ------------------------------------------------------------
-    # Run solver → eutectic path → cascade → recovery
-    # ------------------------------------------------------------
-    result = eutectic_path(mix, modes, solver=solver_choice)
-
+    result = eutectic_path(mix, mix.modes, solver=solver_choice)
     nodes_xeu, nodes_mix = result["cascade"]
     recovery = result["recovery"]
 
-    # ------------------------------------------------------------
-    # Data Processing & Recovery Calculation
-    # ------------------------------------------------------------
     node_recoveries = None
     if isinstance(recovery, dict) and "node_recoveries" in recovery:
         node_recoveries = recovery["node_recoveries"]
@@ -109,20 +85,17 @@ def main(use_vba: bool = True):
         current_prod *= rk
         recoveries_from_steps.append(current_prod)
 
-    summary_matrix = [[1.0] + [to_frac(v) for v in X]]
+    summary_matrix = [[1.0] + [to_frac(v) for v in mix.X]]
     for i, comp in enumerate(nodes_mix):
         recovery_val = recoveries_from_steps[i + 1]
         summary_matrix.append([recovery_val] + [to_frac(v) for v in comp])
 
-    final_pure = [0.0] + [1.0] + [0.0] * (len(X) - 1)
+    final_pure = [0.0] + [1.0] + [0.0] * (len(mix.X) - 1)
     summary_matrix.append(final_pure)
 
     cumR_summary = [row[0] for row in summary_matrix]
     comp_after_summary = [row[1:] for row in summary_matrix]
 
-    # ------------------------------------------------------------
-    # Gradient Engine & Model
-    # ------------------------------------------------------------
     cascade_results = {
         "cumR": cumR_summary,
         "comp_after": comp_after_summary,
@@ -182,9 +155,6 @@ def main(use_vba: bool = True):
     for i in range(len(recoveries)):
         extended_summary.append(summary_matrix_from_model[i] + [M2L[i], RelSolVol[i]])
 
-    n_components = len(summary_matrix_from_model[0]) - 1
-    comp_names = component_labels(n_components)
-
     full_recoveries = [row[0] for row in summary_matrix_from_model]
     solvent_cascade = {
         "cumR": full_recoveries,
@@ -192,11 +162,6 @@ def main(use_vba: bool = True):
     }
     solv_eng = SolventGradientEngine(solvent_cascade)
     solv_eng.compute_gradients()
-
-    print("\n==============================================")
-    print(" EXTENDED SUMMARY MATRIX (M2L + RelSolVol)")
-    print("================================================")
-    print_extended_summary(extended_summary, comp_names)
 
     composition_profile = []
     solvent_profile = []
@@ -211,18 +176,32 @@ def main(use_vba: bool = True):
     return Rmax, composition_profile, solvent_profile
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run eutectic path simulation with different solvers.")
-    parser.add_argument("--vba", dest="use_vba", action="store_const", const=True, default=None,
-                        help="Use VBA walk-down solver")
-    parser.add_argument("--halley", dest="use_vba", action="store_const", const=False,
-                        help="Use Halley solver")
-    args = parser.parse_args()
+def run_single_mixture(mixture):
+    """Run the solver for a saved mixture dict from PagePhysChem JSON."""
+    if not isinstance(mixture, dict):
+        raise TypeError("run_single_mixture expects a mixture dict with a 'components' list.")
 
-    if args.use_vba is None:
-        parser.error("Please specify either --vba or --halley")
+    components = mixture.get("components", [])
+    if not components:
+        raise ValueError("The supplied mixture has no components to solve.")
 
-    Rmax, composition_profile, solvent_profile = main(use_vba=args.use_vba)
-    from gui_main import run_gui
-    run_gui(Rmax, composition_profile, solvent_profile)
+    mix = MixtureInput(
+        T=[float(component["Tm"]) for component in components],
+        DH=[float(component["DH"]) for component in components],
+        X=[float(component["Xc"]) for component in components],
+        modes=[str(component["mode"]) for component in components],
+    )
+
+    return _solve_mixture(mix)
+
+
+def main(use_vba: bool = True):
+    """Compatibility wrapper for the existing solver pipeline."""
+    mix = MixtureInput(
+        T=T,
+        DH=DH,
+        X=X,
+        modes=modes,
+    )
+    return _solve_mixture(mix, use_vba=use_vba)
 
