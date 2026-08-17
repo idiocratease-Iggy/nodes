@@ -208,57 +208,36 @@ class PagePhysChem(QWizardPage):
             dh_sd_factor=1.0,
             max_solvent_volumes=3,
         )
+
         config = build_configuration_json(params)
+
+        from mixture_generator import generate_mixture_set
         mixtures = generate_mixture_set(config, num_systems=1)
+
         self.current_mixture = mixtures[0]
-        self.current_config = config
-        print("[Single] Generated mixture:", self.current_mixture)
         return self.current_mixture
 
-    def write_single_json(self):
-        params = Params(
-            n_components=self.spin_ncomp.value(),
-            main_component_index=0,
-            main_component_level=self.spin_main_level.value() / 100.0,
-            stochastic_variance=0.20,
-            max_addition_compounds=0,
-            tm_base=130.0,
-            tm_sd_factor=1.0,
-            dh_sd_factor=1.0,
-            max_solvent_volumes=3,
-        )
 
-        config = build_configuration_json(params)
-        mixtures = generate_mixture_set(config, num_systems=1)
-        self.current_mixture = mixtures[0]
-        self.current_config = config
+    def write_single_json(self):
+        if not hasattr(self, "current_mixture"):
+            self.generate_single_mixture()
+
+        mixture = self.current_mixture
 
         path = DATA_DIR / "single_mixture.json"
         with open(path, "w") as f:
-            json.dump(self.current_mixture, f, indent=4)
+            json.dump(mixture, f, indent=4)
 
         print(f"[Single] Wrote → {path}")
-        return self.current_mixture
+
 
     def read_single_json(self):
         path = DATA_DIR / "single_mixture.json"
-        if not path.exists():
-            print("[Single] No JSON file found.")
-            return
-
         with open(path, "r") as f:
-            mixture = json.load(f)
+            self.current_mixture = json.load(f)
 
-        self.current_mixture = mixture
-        self.current_config = mixture
+        print("[Single] Loaded mixture.")
 
-        components = mixture.get("components", [])
-        if components:
-            self.spin_ncomp.setValue(len(components))
-            main_x = float(components[0].get("Xc", components[0].get("x", 0.0))) if isinstance(components[0], dict) else 0.0
-            self.spin_main_level.setValue(int(round(main_x * 100)))
-        print("[Single] Loaded mixture config.")
-        return mixture
 
     def write_multi_json(self):
         params = Params(
@@ -300,23 +279,24 @@ class PagePhysChem(QWizardPage):
         self.btn_write_matrix_json.setVisible(True)
 
     def show_plot(self):
-        from gui_main import run_gui
         from single_mixture_solver import run_single_mixture
+        from gui_main import run_gui
 
-        if not hasattr(self, "current_mixture") or self.current_mixture is None:
-            self.write_single_json()
+        # Always generate fresh mixture
+        mixture = self.generate_single_mixture()
 
-        Rmax, composition_profile, solvent_profile = run_single_mixture(self.current_mixture)
-
+        Rmax, composition_profile, solvent_profile = run_single_mixture(mixture)
         self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
 
+
     def run_multxeu_gui(self):
-        import single_mixture_solver
+        from single_mixture_solver import run_single_mixture
+        from gui_main import run_gui
 
-        if not hasattr(self, "current_mixture") or self.current_mixture is None:
-            self.write_single_json()
+        # Always generate fresh mixture
+        mixture = self.generate_single_mixture()
 
-        Rmax, composition_profile, solvent_profile = run_single_mixture(self.current_mixture)
+        Rmax, composition_profile, solvent_profile = run_single_mixture(mixture)
 
         run_gui(Rmax, composition_profile, solvent_profile)
         
