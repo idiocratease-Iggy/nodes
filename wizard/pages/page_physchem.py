@@ -4,7 +4,8 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
-    QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy, QTextEdit
+    QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy, QTextEdit,
+    QFileDialog
 )
 from PyQt6.QtCore import Qt
 from gui_main import run_gui
@@ -72,9 +73,15 @@ class PagePhysChem(QWizardPage):
         main_layout2.addWidget(self.spin_main_level)
         single_layout.addLayout(main_layout2)
 
-        self.btn_plot = QPushButton("Plot purification profile")
-        single_layout.addWidget(self.btn_plot)
-        self.btn_plot.clicked.connect(self.show_plot)
+        plot_buttons_layout = QHBoxLayout()
+        self.btn_generate_single_plot = QPushButton("Generate New Single Plot")
+        self.btn_plot_loaded_data = QPushButton("Plot Loaded Data")
+        plot_buttons_layout.addWidget(self.btn_generate_single_plot)
+        plot_buttons_layout.addWidget(self.btn_plot_loaded_data)
+        single_layout.addLayout(plot_buttons_layout)
+
+        self.btn_generate_single_plot.clicked.connect(self.generate_single_plot)
+        self.btn_plot_loaded_data.clicked.connect(self.plot_loaded_data)
 
         json_layout = QHBoxLayout()
         self.btn_write_json = QPushButton("Save JSON single mixture data file")
@@ -210,33 +217,44 @@ class PagePhysChem(QWizardPage):
         )
 
         config = build_configuration_json(params)
-
-        from mixture_generator import generate_mixture_set
         mixtures = generate_mixture_set(config, num_systems=1)
-
         self.current_mixture = mixtures[0]
         return self.current_mixture
 
-
     def write_single_json(self):
-        if not hasattr(self, "current_mixture"):
+        if self.current_mixture is None:
             self.generate_single_mixture()
 
-        mixture = self.current_mixture
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save single mixture JSON",
+            str(DATA_DIR / "single_mixture.json"),
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not path:
+            return None
 
-        path = DATA_DIR / "single_mixture.json"
         with open(path, "w") as f:
-            json.dump(mixture, f, indent=4)
+            json.dump(self.current_mixture, f, indent=4)
 
         print(f"[Single] Wrote → {path}")
-
+        return self.current_mixture
 
     def read_single_json(self):
-        path = DATA_DIR / "single_mixture.json"
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load single mixture JSON",
+            str(DATA_DIR),
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not path:
+            return None
+
         with open(path, "r") as f:
             self.current_mixture = json.load(f)
 
         print("[Single] Loaded mixture.")
+        return self.current_mixture
 
 
     def write_multi_json(self):
@@ -278,25 +296,29 @@ class PagePhysChem(QWizardPage):
         self.btn_read_matrix_json.setVisible(not is_auto)
         self.btn_write_matrix_json.setVisible(True)
 
-    def show_plot(self):
-        from single_mixture_solver import run_single_mixture
-        from gui_main import run_gui
-
-        # Always generate fresh mixture
+    def generate_single_plot(self):
         mixture = self.generate_single_mixture()
-
         Rmax, composition_profile, solvent_profile = run_single_mixture(mixture)
         self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
 
+    def plot_loaded_data(self):
+        if self.current_mixture is None:
+            print("[Single] No loaded mixture available to plot.")
+            return
+
+        Rmax, composition_profile, solvent_profile = run_single_mixture(self.current_mixture)
+        self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
+
+    def show_plot(self):
+        self.plot_loaded_data()
 
     def run_multxeu_gui(self):
         from single_mixture_solver import run_single_mixture
         from gui_main import run_gui
 
-        # Always generate fresh mixture
-        mixture = self.generate_single_mixture()
+        if self.current_mixture is None:
+            self.generate_single_mixture()
 
-        Rmax, composition_profile, solvent_profile = run_single_mixture(mixture)
-
+        Rmax, composition_profile, solvent_profile = run_single_mixture(self.current_mixture)
         run_gui(Rmax, composition_profile, solvent_profile)
         
