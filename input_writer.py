@@ -45,13 +45,12 @@ def _coerce_params(params, main_component_level=None, max_addition_compounds=Non
             main_component_level=float(meta.get("main_component_level", 0.5)),
             stochastic_variance=float(meta.get("stochastic_variance", 0.0)),
             max_addition_compounds=int(meta.get("max_addition_compounds", 0)),
-            degeneracy_enabled=bool(meta.get("degeneracy_enabled", False)),
+           
             tm_base=float(meta.get("tm_base", tm_base if tm_base is not None else 0.0)),
             tm_sd_factor=float(meta.get("tm_sd_factor", tm_sd_factor if tm_sd_factor is not None else 1.0)),
             dh_sd_factor=float(meta.get("dh_sd_factor", dh_sd_factor if dh_sd_factor is not None else 1.0)),
             max_solvent_volumes=int(meta.get("max_solvent_volumes", 0)),
-            include_rmax_slice=bool(meta.get("include_rmax_slice", False)),
-            notes=str(meta.get("notes", "")),
+           
         )
 
     return Params(
@@ -65,8 +64,7 @@ def _coerce_params(params, main_component_level=None, max_addition_compounds=Non
         tm_sd_factor=float(tm_sd_factor if tm_sd_factor is not None else 1.0),
         dh_sd_factor=float(dh_sd_factor if dh_sd_factor is not None else 1.0),
         max_solvent_volumes=0,
-        include_rmax_slice=False,
-        notes="",
+        
     )
 
 
@@ -156,24 +154,27 @@ def generate_physchem(params: Params, Xc, add_indices=None, tm_base=None,
 
 
 def assign_pd_svl(params: Params, Xc, add_indices=None, pd_probability: float = 0.25):
-    """Assign PD only to random candidates among the lowest half of Xc values."""
-    params = _coerce_params(params)
-    n = int(params.n_components)
-    if n <= 0:
-        return []
+    # ---------------------------------------------------------
+    # PD assignment based on max_addition_compounds
+    # ---------------------------------------------------------
+    max_pd = params.get("max_addition_compounds", 0)
 
-    candidate_indices = np.argsort(np.asarray(Xc, dtype=float))[:max(0, math.floor(n / 2))]
+    # Start with all SVL
+    modes = ["SVL"] * params["n_components"]
 
-    pd_indices = []
-    for idx in candidate_indices:
-        if random.random() < pd_probability:
-            pd_indices.append(int(idx))
+    if max_pd > 0:
+        import random
 
-    modes = ["SVL"] * n
-    for idx in pd_indices:
-        modes[idx] = "PD"
+        # PD cannot be assigned to the main component (index 0)
+        candidate_indices = list(range(1, params["n_components"]))
 
-    return modes
+        # Randomly choose up to max_pd PD components
+        pd_indices = random.sample(candidate_indices, k=min(max_pd, len(candidate_indices)))
+
+        for idx in pd_indices:
+            modes[idx] = "PD"
+
+        return modes
 
 
 def build_configuration_json(params: Params):
@@ -187,8 +188,8 @@ def build_configuration_json(params: Params):
             "main_component_level": params.main_component_level,
             "stochastic_variance": params.stochastic_variance,
             "max_addition_compounds": params.max_addition_compounds,
-            "degeneracy_enabled": params.degeneracy_enabled,
-            "notes": params.notes,
+            #"degeneracy_enabled": params.degeneracy_enabled,
+            #"notes": params.notes,
         },
         "physchem_rules": {
             "tm_base": params.tm_base,
@@ -198,7 +199,7 @@ def build_configuration_json(params: Params):
         },
         "slicing": {
             "max_solvent_volumes": params.max_solvent_volumes,
-            "include_rmax_slice": params.include_rmax_slice,
+          #  "include_rmax_slice": params.include_rmax_slice,
         },
     }
 

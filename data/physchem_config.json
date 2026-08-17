@@ -1,13 +1,11 @@
 {
-  "config_id": "260816",
+  "config_id": "260817",
   "metadata": {
-    "n_components": 6,
+    "n_components": 9,
     "main_component_index": 0,
     "main_component_level": 0.8,
     "stochastic_variance": 0.2,
-    "max_addition_compounds": 2,
-    "degeneracy_enabled": false,
-    "notes": ""
+    "max_addition_compounds": 3
   },
   "physchem_rules": {
     "tm_base": 130.0,
@@ -16,7 +14,6 @@
     "dh_correlation": "0.0714*(273+Tm)"
   },
   "slicing": {
-    "max_solvent_volumes": 3,
-    "include_rmax_slice": false
+    "max_solvent_volumes": 3
   }
 }

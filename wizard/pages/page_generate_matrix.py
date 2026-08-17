@@ -290,6 +290,8 @@ class PageGenerateMatrix(QWizardPage):
     # ---------------------------------------------------------
     # Generate mixtures from physchem_config.json
     # ---------------------------------------------------------
+
+    
     def generate_mixtures(self, config_path=None):
         self.model.replicate_percent = self.spin_repl.value() if self.chk_repl.isChecked() else 0
         self.model.analytical_error_percent = self.spin_error.value() if self.chk_error.isChecked() else 0
@@ -317,6 +319,7 @@ class PageGenerateMatrix(QWizardPage):
         write_json(matrix_path, mixtures)
 
         print(f"[Matrix] Wrote {num} mixtures → {matrix_path}")
+
 
     # ---------------------------------------------------------
     # Save plate metadata into model (unchanged)

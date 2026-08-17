@@ -1,14 +1,12 @@
 [
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -17,71 +15,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.7901106944098112,
-        "Tm": 184.41542110180555,
-        "DH": 21.690519556962474,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.8106311772076192,
+        "Tm": 105.35250283886404,
+        "DH": 32.7644412858512,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04355031007870644,
-        "Tm": 111.96719005407687,
-        "DH": 32.69295304501156,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.027738814686477094,
+        "Tm": 180.92695283172824,
+        "DH": 30.530342737312115,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.03755660672048855,
-        "Tm": 112.49914367593455,
-        "DH": 28.129948600393345,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.02317667098582598,
+        "Tm": 127.29865623802942,
+        "DH": 17.900167928186583,
+        "mode": "PD"
       },
       {
         "index": 3,
-        "Xc": 0.04427531008612444,
-        "Tm": 131.92972756769825,
-        "DH": 22.350237496584626,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.02863299372280354,
+        "Tm": 86.2177278520225,
+        "DH": 20.968832895736604,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.04785500321922742,
-        "Tm": 103.39495334847585,
-        "DH": 40.89466551904807,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.02487934989316127,
+        "Tm": 134.98554282269905,
+        "DH": 29.918100130355477,
+        "mode": "PD"
       },
       {
         "index": 5,
-        "Xc": 0.03665207548564194,
-        "Tm": 135.78013452295386,
-        "DH": 28.67769408932302,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.022825664248998127,
+        "Tm": 143.5829412637848,
+        "DH": 20.392532346633466,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.02327436925388554,
+        "Tm": 189.36630519552065,
+        "DH": 31.561216014264822,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.02408828712851265,
+        "Tm": 112.67193427449588,
+        "DH": 27.089622766751344,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.014752672872716623,
+        "Tm": 154.88507716959703,
+        "DH": 41.90272117469435,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_001"
+    "mixture_id": "260817_001"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -90,71 +100,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.8009319046005889,
-        "Tm": 86.4147265570245,
-        "DH": 28.849322221029396,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.7950894522687908,
+        "Tm": 147.395911621142,
+        "DH": 32.74196752245901,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04022304970129038,
-        "Tm": 108.41308704691195,
-        "DH": 35.71295102248689,
-        "mode": "PD",
-        "is_addition_compound": true
+        "Xc": 0.025854995789512124,
+        "Tm": 160.31927063129535,
+        "DH": 34.18815418735035,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.03032210275786056,
-        "Tm": 99.98052990096117,
-        "DH": 32.90448212022555,
-        "mode": "PD",
-        "is_addition_compound": true
+        "Xc": 0.025854677150005525,
+        "Tm": 135.76039726420845,
+        "DH": 29.601554228735903,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.040116282184494985,
-        "Tm": 132.16719160433928,
-        "DH": 28.014640265160637,
-        "mode": "PD",
-        "is_addition_compound": false
+        "Xc": 0.02344028782397049,
+        "Tm": 100.62946667016739,
+        "DH": 24.446068813620855,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.041820655713014354,
-        "Tm": 149.67072261894742,
-        "DH": 26.55954642467538,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.023456101056778034,
+        "Tm": 166.55153965853074,
+        "DH": 38.83631592265572,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.0465860050427508,
-        "Tm": 82.79193149635235,
-        "DH": 29.349501171466322,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.028451772051959107,
+        "Tm": 162.07949122297777,
+        "DH": 33.12018815216272,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.026635683898504396,
+        "Tm": 136.37580065517204,
+        "DH": 26.05820422435897,
+        "mode": "PD"
+      },
+      {
+        "index": 7,
+        "Xc": 0.02524909759467981,
+        "Tm": 129.02868143022644,
+        "DH": 31.639876406231686,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.02596793236579968,
+        "Tm": 106.42094996587255,
+        "DH": 31.03184744089762,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_002"
+    "mixture_id": "260817_002"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -163,71 +185,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.792138651882613,
-        "Tm": 59.33420667879113,
-        "DH": 23.4635111876382,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.80003269217821,
+        "Tm": 141.37838730381984,
+        "DH": 27.110703900742028,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04942547861136845,
-        "Tm": 161.12927430836396,
-        "DH": 28.731909308620747,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.027306748488787974,
+        "Tm": 129.2457094879704,
+        "DH": 28.086030334689642,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.054120861439675795,
-        "Tm": 116.6035270490918,
-        "DH": 38.55771507658184,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.021582978002778787,
+        "Tm": 147.40302974825403,
+        "DH": 22.672054470967133,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.04391009580125817,
-        "Tm": 117.41424873829129,
-        "DH": 17.105745863267995,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.01995381148976669,
+        "Tm": 98.93215808407416,
+        "DH": 36.65183014176595,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.03552302284989657,
-        "Tm": 98.73874051682434,
-        "DH": 32.32857207366088,
-        "mode": "PD",
-        "is_addition_compound": true
+        "Xc": 0.028859029261609565,
+        "Tm": 78.60468146561891,
+        "DH": 27.940667050820853,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.024881889415188044,
-        "Tm": 113.75125635765883,
-        "DH": 21.324658324279767,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.028353231665507475,
+        "Tm": 166.68042821326387,
+        "DH": 35.61678091347201,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.021663800226703063,
+        "Tm": 184.4419380081254,
+        "DH": 43.49384892248814,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.029127033808336995,
+        "Tm": 91.95003331021374,
+        "DH": 26.36740374180904,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.023120674878299413,
+        "Tm": 163.3116123137238,
+        "DH": 35.587115919670154,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_003"
+    "mixture_id": "260817_003"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -236,71 +270,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.8090827771311809,
-        "Tm": 123.69631887505957,
-        "DH": 22.944790402681562,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.791804648159666,
+        "Tm": 134.6204674280627,
+        "DH": 34.96034576788787,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04300903089093145,
-        "Tm": 124.7822219885079,
-        "DH": 28.97495795871376,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.028829194298341028,
+        "Tm": 85.85642186209239,
+        "DH": 29.835672990795214,
+        "mode": "PD"
       },
       {
         "index": 2,
-        "Xc": 0.03650671053189329,
-        "Tm": 143.2461637587647,
-        "DH": 26.634172159714886,
-        "mode": "PD",
-        "is_addition_compound": false
+        "Xc": 0.02573570485929987,
+        "Tm": 153.74901898632328,
+        "DH": 40.35901117603323,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.03251742622857019,
-        "Tm": 141.17499885593708,
-        "DH": 29.034621501982894,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.023247879878958565,
+        "Tm": 160.90301219362095,
+        "DH": 23.77979031243683,
+        "mode": "PD"
       },
       {
         "index": 4,
-        "Xc": 0.042914913992233246,
-        "Tm": 165.48504506323383,
-        "DH": 34.419044131520295,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.01795914736755151,
+        "Tm": 102.43015115585095,
+        "DH": 36.99313030375846,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.03596914122519102,
-        "Tm": 185.01645378307802,
-        "DH": 41.015730081587826,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.032382683057617864,
+        "Tm": 91.04187624937963,
+        "DH": 28.65454244976973,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.025916719140521592,
+        "Tm": 174.88010490383508,
+        "DH": 34.924767633507095,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.026404869272972423,
+        "Tm": 157.73787371102603,
+        "DH": 28.41979034886829,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.02771915396507107,
+        "Tm": 118.35626314103423,
+        "DH": 32.07996339575447,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_004"
+    "mixture_id": "260817_004"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -309,71 +355,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.7884963421378184,
-        "Tm": 102.0440571363686,
-        "DH": 18.997253390165866,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.8030207906936269,
+        "Tm": 88.97387982660464,
+        "DH": 23.94089018959588,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04611383405209171,
-        "Tm": 95.1057416294337,
-        "DH": 24.182669913700447,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.029886103373158345,
+        "Tm": 99.97022596190845,
+        "DH": 22.452529282884623,
+        "mode": "PD"
       },
       {
         "index": 2,
-        "Xc": 0.036499835013967336,
-        "Tm": 122.90665415867272,
-        "DH": 30.14733644608968,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.018733708353276445,
+        "Tm": 123.98023345953771,
+        "DH": 37.756929434652804,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.04567849021423576,
-        "Tm": 122.67227707329684,
-        "DH": 30.257139140401364,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.022046724111785338,
+        "Tm": 129.30170002308694,
+        "DH": 31.53506928956766,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.04286585134992393,
-        "Tm": 115.46774041053564,
-        "DH": 34.28154179592218,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.02236981233562986,
+        "Tm": 102.30527865445852,
+        "DH": 29.464932740982473,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.04034564723196291,
-        "Tm": 114.77663348053383,
-        "DH": 35.586583864655424,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.01907995675362599,
+        "Tm": 182.93193207265423,
+        "DH": 27.086137337109413,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.030027184692597103,
+        "Tm": 159.7826292275949,
+        "DH": 35.84859698827533,
+        "mode": "PD"
+      },
+      {
+        "index": 7,
+        "Xc": 0.02466728037712047,
+        "Tm": 142.68534004846802,
+        "DH": 27.41418612089829,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.03016843930917954,
+        "Tm": 159.12966167319206,
+        "DH": 26.900061326554614,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_005"
+    "mixture_id": "260817_005"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -382,71 +440,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.8135412791779426,
-        "Tm": 167.63574190096733,
-        "DH": 31.472451744250666,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.7881684070634807,
+        "Tm": 135.37180980490223,
+        "DH": 18.20185191343554,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.05600024790436133,
-        "Tm": 141.58540502402911,
-        "DH": 39.64317858267634,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.028857115364351392,
+        "Tm": 152.25805144478582,
+        "DH": 17.530499833451145,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.04049897888450709,
-        "Tm": 149.2193767681511,
-        "DH": 31.037398033775794,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.028857115364351392,
+        "Tm": 152.25805144478582,
+        "DH": 17.530499833451145,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.021289687950332405,
-        "Tm": 98.1738989246613,
-        "DH": 27.926052996786645,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.01774791524298569,
+        "Tm": 148.0791483168252,
+        "DH": 27.552527815215463,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.022835506312890566,
-        "Tm": 160.5338203978078,
-        "DH": 26.43335679005184,
-        "mode": "PD",
-        "is_addition_compound": false
+        "Xc": 0.02894315964897707,
+        "Tm": 113.97970755434667,
+        "DH": 20.973116874075806,
+        "mode": "PD"
       },
       {
         "index": 5,
-        "Xc": 0.04583429976996588,
-        "Tm": 102.77473361435594,
-        "DH": 29.08441639837906,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.027329127311268225,
+        "Tm": 139.17113759542332,
+        "DH": 25.66464938837354,
+        "mode": "PD"
+      },
+      {
+        "index": 6,
+        "Xc": 0.03248175657332891,
+        "Tm": 140.04510344591063,
+        "DH": 26.48655577283786,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.020897755483441128,
+        "Tm": 164.3302964297298,
+        "DH": 25.035633169083376,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.029058624139114003,
+        "Tm": 145.03095829839228,
+        "DH": 22.671473004407343,
+        "mode": "PD"
       }
     ],
-    "mixture_id": "260816_006"
+    "mixture_id": "260817_006"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -455,71 +525,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.7813130756706762,
-        "Tm": 136.57890934583745,
-        "DH": 28.635515945020792,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.7927915266210765,
+        "Tm": 89.67443203148491,
+        "DH": 17.44064529863047,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.046759940957500905,
-        "Tm": 104.86019003128669,
-        "DH": 22.478677063028492,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.029091270918445673,
+        "Tm": 135.2208773240634,
+        "DH": 28.839012683497764,
+        "mode": "PD"
       },
       {
         "index": 2,
-        "Xc": 0.03770084442299433,
-        "Tm": 131.2436379690871,
-        "DH": 17.860601104417082,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.017572805624429554,
+        "Tm": 121.59032374937468,
+        "DH": 25.028575714972586,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.05685282053260347,
-        "Tm": 109.51512340476185,
-        "DH": 22.002489569887317,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.022312445350834105,
+        "Tm": 125.11970225796742,
+        "DH": 30.383648340959585,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.037641137672776,
-        "Tm": 103.55601388828433,
-        "DH": 27.41470283340535,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.029652721699054155,
+        "Tm": 129.6816653520848,
+        "DH": 34.611121956240694,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.039732180743449,
-        "Tm": 123.47994627466306,
-        "DH": 24.714146300586233,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.026930567231642315,
+        "Tm": 97.5659429573451,
+        "DH": 23.696995144072417,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.028625503483076416,
+        "Tm": 156.58361902476122,
+        "DH": 26.336290112615963,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.025016228808309754,
+        "Tm": 93.44212810691891,
+        "DH": 27.086597504320466,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.028006930263131516,
+        "Tm": 115.69290781034981,
+        "DH": 31.533613458387148,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_007"
+    "mixture_id": "260817_007"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -528,71 +610,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.7937179951448653,
-        "Tm": 144.6169135634981,
-        "DH": 28.796060679423316,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.7949929678607521,
+        "Tm": 111.6595623731159,
+        "DH": 27.10139199585065,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.032388670224726405,
-        "Tm": 134.7155724613008,
-        "DH": 27.200266601725065,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.019998469889785868,
+        "Tm": 111.46299772516316,
+        "DH": 21.547842645167567,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.037395172519515116,
-        "Tm": 113.01273348847012,
-        "DH": 21.67123430372213,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.025880963077900006,
+        "Tm": 112.3926893926642,
+        "DH": 23.994288316729,
+        "mode": "PD"
       },
       {
         "index": 3,
-        "Xc": 0.05472883733633547,
-        "Tm": 151.77830371393284,
-        "DH": 38.00599995804789,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.029185612089766926,
+        "Tm": 107.20167836058353,
+        "DH": 20.59447860004855,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.04317076110502199,
-        "Tm": 170.64706511613062,
-        "DH": 27.952223593581127,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.03340488723232328,
+        "Tm": 120.47642401950041,
+        "DH": 27.18243499520859,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.038598563669535686,
-        "Tm": 107.60007755813469,
-        "DH": 24.28604003153434,
-        "mode": "PD",
-        "is_addition_compound": false
+        "Xc": 0.015031103330657922,
+        "Tm": 115.69486771954035,
+        "DH": 20.92797810668889,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.025731328675187654,
+        "Tm": 107.04395885061996,
+        "DH": 31.648886105396585,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.028547674370766683,
+        "Tm": 147.6609724396036,
+        "DH": 27.90130447092134,
+        "mode": "PD"
+      },
+      {
+        "index": 8,
+        "Xc": 0.02722699347285949,
+        "Tm": 146.80352976671463,
+        "DH": 34.09904006231724,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_008"
+    "mixture_id": "260817_008"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -601,71 +695,83 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.7919613214045432,
-        "Tm": 132.0857086134844,
-        "DH": 23.172898821825473,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.8034564391165309,
+        "Tm": 109.33969011099356,
+        "DH": 19.61063950484673,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.04236454896930392,
-        "Tm": 143.91210508279525,
-        "DH": 42.67711364624834,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.026448433265044192,
+        "Tm": 111.84987979351001,
+        "DH": 30.14152301129345,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.03139424818563305,
-        "Tm": 131.1485335251215,
-        "DH": 36.10292689838272,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.03129873206080427,
+        "Tm": 118.20351739320162,
+        "DH": 34.13239873288426,
+        "mode": "SVL"
       },
       {
         "index": 3,
-        "Xc": 0.0398367713740893,
-        "Tm": 114.94580860992185,
-        "DH": 24.099246860523714,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.021512409453528853,
+        "Tm": 100.40389434987377,
+        "DH": 24.835595109108777,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.039470381775308275,
-        "Tm": 125.02713912547597,
-        "DH": 24.507199008433325,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.030247766638787414,
+        "Tm": 120.74119924641352,
+        "DH": 30.146147888689164,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.05497272829112217,
-        "Tm": 94.92184877512564,
-        "DH": 34.81087264503334,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.01809489435846386,
+        "Tm": 108.56437719040883,
+        "DH": 25.499958338801058,
+        "mode": "SVL"
+      },
+      {
+        "index": 6,
+        "Xc": 0.024321575767587554,
+        "Tm": 86.00854731074125,
+        "DH": 20.698263739710736,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.02272072478300143,
+        "Tm": 103.91020503855495,
+        "DH": 27.9759591036961,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.02189902455625156,
+        "Tm": 109.22702380653865,
+        "DH": 26.55837276119949,
+        "mode": "PD"
       }
     ],
-    "mixture_id": "260816_009"
+    "mixture_id": "260817_009"
   },
   {
-    "config_id": "260816",
+    "config_id": "260817",
     "metadata": {
-      "n_components": 6,
+      "n_components": 9,
       "main_component_index": 0,
       "main_component_level": 0.8,
       "stochastic_variance": 0.2,
-      "max_addition_compounds": 2,
-      "degeneracy_enabled": false,
-      "notes": ""
+      "max_addition_compounds": 3
     },
     "physchem_rules": {
       "tm_base": 130.0,
@@ -674,59 +780,73 @@
       "dh_correlation": "0.0714*(273+Tm)"
     },
     "slicing": {
-      "max_solvent_volumes": 3,
-      "include_rmax_slice": false
+      "max_solvent_volumes": 3
     },
     "components": [
       {
         "index": 0,
-        "Xc": 0.8023573157280911,
-        "Tm": 135.24118459453516,
-        "DH": 26.427514120622927,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.7910681195655478,
+        "Tm": 113.61170477829393,
+        "DH": 30.163890912809165,
+        "mode": "SVL"
       },
       {
         "index": 1,
-        "Xc": 0.037842287669410966,
-        "Tm": 130.413638433463,
-        "DH": 27.959941859332464,
-        "mode": "PD",
-        "is_addition_compound": true
+        "Xc": 0.02567888452223395,
+        "Tm": 162.02094537133243,
+        "DH": 30.720336070740974,
+        "mode": "SVL"
       },
       {
         "index": 2,
-        "Xc": 0.031614397348659326,
-        "Tm": 134.3516176798625,
-        "DH": 31.99993859792802,
-        "mode": "SVL",
-        "is_addition_compound": true
+        "Xc": 0.017856283458922848,
+        "Tm": 117.89778512686814,
+        "DH": 24.091041868374216,
+        "mode": "PD"
       },
       {
         "index": 3,
-        "Xc": 0.04731829436834113,
-        "Tm": 134.66569920979694,
-        "DH": 34.633732803653594,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.03535123746070109,
+        "Tm": 148.2512507583395,
+        "DH": 39.46406315812138,
+        "mode": "SVL"
       },
       {
         "index": 4,
-        "Xc": 0.050062648405277806,
-        "Tm": 147.79111323871263,
-        "DH": 40.53747401945768,
-        "mode": "SVL",
-        "is_addition_compound": false
+        "Xc": 0.0313857499526639,
+        "Tm": 138.2279501698366,
+        "DH": 26.873811421892285,
+        "mode": "SVL"
       },
       {
         "index": 5,
-        "Xc": 0.030805056480219643,
-        "Tm": 119.59314987959691,
-        "DH": 32.11233739712638,
-        "mode": "PD",
-        "is_addition_compound": false
+        "Xc": 0.03148933275050633,
+        "Tm": 166.1676966917436,
+        "DH": 28.422499579784063,
+        "mode": "PD"
+      },
+      {
+        "index": 6,
+        "Xc": 0.029472441579349407,
+        "Tm": 89.32121352303668,
+        "DH": 24.048726875378136,
+        "mode": "SVL"
+      },
+      {
+        "index": 7,
+        "Xc": 0.016649364901556576,
+        "Tm": 153.06787878872007,
+        "DH": 21.380006055600322,
+        "mode": "SVL"
+      },
+      {
+        "index": 8,
+        "Xc": 0.021048585808518105,
+        "Tm": 87.65826106312615,
+        "DH": 26.97754980426997,
+        "mode": "SVL"
       }
     ],
-    "mixture_id": "260816_010"
+    "mixture_id": "260817_010"
   }
 ]

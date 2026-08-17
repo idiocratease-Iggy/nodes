@@ -124,13 +124,6 @@ class PagePhysChem(QWizardPage):
         addition_layout.addWidget(self.spin_addition)
         multi_layout.addLayout(addition_layout)
 
-        degeneracy_layout = QHBoxLayout()
-        degeneracy_layout.addWidget(QLabel("Degeneracy enabled:"))
-        self.chk_degeneracy = QCheckBox()
-        self.chk_degeneracy.setChecked(False)
-        degeneracy_layout.addWidget(self.chk_degeneracy)
-        multi_layout.addLayout(degeneracy_layout)
-
         tm_layout = QHBoxLayout()
         tm_layout.addWidget(QLabel("Base melting point:"))
         self.spin_tm_base = QSpinBox()
@@ -139,19 +132,6 @@ class PagePhysChem(QWizardPage):
         tm_layout.addWidget(self.spin_tm_base)
         multi_layout.addLayout(tm_layout)
 
-        rmax_layout = QHBoxLayout()
-        rmax_layout.addWidget(QLabel("Include Rmax slice:"))
-        self.chk_rmax_slice = QCheckBox()
-        self.chk_rmax_slice.setChecked(False)
-        rmax_layout.addWidget(self.chk_rmax_slice)
-        multi_layout.addLayout(rmax_layout)
-
-        notes_layout = QHBoxLayout()
-        notes_layout.addWidget(QLabel("Notes:"))
-        self.txt_notes = QTextEdit()
-        self.txt_notes.setPlaceholderText("Optional notes")
-        notes_layout.addWidget(self.txt_notes)
-        multi_layout.addLayout(notes_layout)
 
         self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set")
         multi_layout.addWidget(self.btn_generate_matrix)
@@ -179,13 +159,11 @@ class PagePhysChem(QWizardPage):
             main_component_level=self.spin_main_level.value() / 100.0,
             stochastic_variance=self.spin_variance.value() / 100.0,
             max_addition_compounds=self.spin_addition.value(),
-            degeneracy_enabled=self.chk_degeneracy.isChecked(),
             tm_base=float(self.spin_tm_base.value()),
             tm_sd_factor=1.0,
             dh_sd_factor=1.0,
             max_solvent_volumes=self.spin_slices.value(),
-            include_rmax_slice=self.chk_rmax_slice.isChecked(),
-            notes=self.txt_notes.toPlainText()
+            
         )
 
         json_data = build_configuration_json(params)
@@ -226,3 +204,4 @@ class PagePhysChem(QWizardPage):
 
         Rmax, composition_profile, solvent_profile = test_run.main()
         run_gui(Rmax, composition_profile, solvent_profile)
+        
