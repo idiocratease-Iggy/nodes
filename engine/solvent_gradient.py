@@ -18,15 +18,15 @@ class PurificationModel:
 
 
 class SolventGradientEngine:
-    def __init__(self, cascade_results):
+    def __init__(self, result_data):
         """
-        cascade_results must contain:
+        result_data must contain:
         - cumR: list of cumulative recoveries after each node (descending from 1 to 0)
         - solvent: list of scalar solvent values at each node (RelSolVol)
         """
-        self.cascade = cascade_results
-        self.cumR = cascade_results.get("cumR", [])
-        self.solvent = cascade_results.get("solvent", [])
+        self.cascade = result_data
+        self.cumR = result_data.get("cumR", [])
+        self.solvent = result_data.get("solvent", [])
         self.gradients = None
         self.intercepts = None
 

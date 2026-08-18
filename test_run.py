@@ -123,12 +123,12 @@ def main(use_vba: bool = True):
     # ------------------------------------------------------------
     # Gradient Engine & Model
     # ------------------------------------------------------------
-    cascade_results = {
+    result_data = {
         "cumR": cumR_summary,
         "comp_after": comp_after_summary,
     }
 
-    grad_eng = GradientEngine(cascade_results)
+    grad_eng = GradientEngine(result_data)
     model = grad_eng.build_model(run_id="MX_2026_08_11_001")
     grad_eng.compute_gradients()
 

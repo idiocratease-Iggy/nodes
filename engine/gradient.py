@@ -23,15 +23,15 @@ class PurificationModel:
 
 class GradientEngine:
 
-    def __init__(self, cascade_results):
+    def __init__(self, result_data):
         """
-        cascade_results must contain:
+        result_data must contain:
         - cumR: list of cumulative recoveries after each node (descending from 1 to 0)
         - comp_after: list of compositions after each node (list of lists)
         """
-        self.cascade = cascade_results
-        self.cumR = cascade_results.get("cumR", [])
-        self.comp_after = cascade_results.get("comp_after", [])
+        self.cascade = result_data
+        self.cumR = result_data.get("cumR", [])
+        self.comp_after = result_data.get("comp_after", [])
         self.gradients = None
         self.intercepts = None
 

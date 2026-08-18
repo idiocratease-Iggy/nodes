@@ -13,8 +13,8 @@ def run_cascade(mixture, modes, solver="halley"):
     node_recoveries = []
     cumulative_recovery = 1.0
     tk_nodes = []
-
-
+    solvent_values = []
+    solvent_total = 0.0
 
     while len(mix.active_components()) > 1:
         # 1. Solve eutectic
@@ -75,7 +75,11 @@ def run_cascade(mixture, modes, solver="halley"):
         node_recoveries.append(Rk)
         cumulative_recovery *= Rk
 
-        # 8. Renormalize
+        # 8. Relative solvent volume accumulates with each separation step.
+        solvent_total += max(0.0, 1.0 - Rk)
+        solvent_values.append(solvent_total)
+
+        # 9. Renormalize
         mix.X = [x / S_new for x in new_X]
         nodes_mix.append(mix.X[:])
         lambdas.append(lam)
@@ -87,5 +91,13 @@ def run_cascade(mixture, modes, solver="halley"):
         if active_indices:
             final_purity = mix.X[active_indices[0]]
 
-    return (nodes_xeu, nodes_mix, lambdas, node_recoveries, cumulative_recovery, final_purity, tk_nodes)
-
+    return (
+        nodes_xeu,
+        nodes_mix,
+        lambdas,
+        node_recoveries,
+        cumulative_recovery,
+        final_purity,
+        tk_nodes,
+        solvent_values,   # ← NEW
+    )

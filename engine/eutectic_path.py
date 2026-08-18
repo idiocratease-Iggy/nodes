@@ -37,7 +37,7 @@ def eutectic_path(mixture, modes, solver="halley"):
     # 3. Run cascade → returns nodes and lambdas
     raw_result = run_cascade(mixture.copy(), modes, solver=solver)
     # print(f"DEBUG: run_cascade returned {len(raw_result)} values")
-    nodes_xeu, nodes_mix, lambdas, node_recoveries, Rmax, final_purity, tk_nodes = raw_result
+    nodes_xeu, nodes_mix, lambdas, node_recoveries, Rmax, final_purity, tk_nodes, solvent_values = raw_result
 
 
     
@@ -56,5 +56,6 @@ def eutectic_path(mixture, modes, solver="halley"):
         "cascade": (nodes_xeu, nodes_mix),
         "recovery": recovery,
         "tk_nodes": tk_nodes,
+        "solvent": solvent_values,
     }
 
