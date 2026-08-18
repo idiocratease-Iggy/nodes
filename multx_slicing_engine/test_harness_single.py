@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication, QFileDialog
 
 
 
+
 # Add project root to Python path
 ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(ROOT)
@@ -15,13 +16,17 @@ sys.path.append(ROOT)
 try:
     from multx_slicing_engine.mixture_loader import Mixture, mixture_from_json
     from multx_slicing_engine.canonical_eutectic import build_canonical_state
+    from multx_slicing_engine.canonical_gradients import compute_segment_gradients
     from multx_slicing_engine.slice_engine import compute_slices
     from multx_slicing_engine.experiment_builder import build_experiment_rows
+    from multx_slicing_engine.evaluate_recovery import evaluate_at_recovery as evaluate_recovery
 except ImportError:
     from mixture_loader import Mixture, mixture_from_json
     from canonical_eutectic import build_canonical_state
+    from canonical_gradients import compute_segment_gradients
     from slice_engine import compute_slices
     from experiment_builder import build_experiment_rows
+    from evaluate_recovery import evaluate_at_recovery as evaluate_recovery
 
 def run_test(json_data):
     mixture = mixture_from_json(json_data)
@@ -31,6 +36,7 @@ def run_test(json_data):
         raise ValueError("Invalid JSON: mixture.active_components() is empty after parsing.")
 
     state = build_canonical_state(mixture, modes, solver="vba")
+    segment_grads = compute_segment_gradients(state)
 
     # Example slice recoveries
     slice_R = [0.9, 0.5, 0.1]
@@ -39,6 +45,7 @@ def run_test(json_data):
     rows = build_experiment_rows(mixture, slices)
 
     state = build_canonical_state(mixture, modes, solver="vba")
+    segment_grads = compute_segment_gradients(state)
 
     print("\n==============================================")
     print(" CANONICAL SEGMENTS")
@@ -61,6 +68,23 @@ def run_test(json_data):
         print(f"m_sol: {m_sol:.12f}")
         print(f"Xc_start: [{xs}]")
         print(f"Xc_end:   [{xe}]\n")
+
+    print("\n==============================================")
+    print(" CANONICAL SLICE COMPOSITIONS")
+    print("==============================================\n")
+
+    slice_points = [0.90, 0.50, 0.10]
+
+    for R in slice_points:
+        result = evaluate_recovery(state, segment_grads, R)
+
+        xs = ", ".join(f"{v * 100:.2f}%" for v in result.Xliq)
+        print(f"Slice at R={R:.2f}")
+        print(f"  Evaluated R: {result.R:.2f}")
+        print(f"  Solvent: {result.solvent:.2f}")
+        print(f"  Composition: [{xs}]")
+        print(f"  Ks: {result.Ks:.6f}, kl: {result.kl:.6f}\n")
+
 
 
 

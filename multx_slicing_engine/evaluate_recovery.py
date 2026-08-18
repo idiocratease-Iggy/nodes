@@ -2,8 +2,13 @@
 
 from dataclasses import dataclass
 from typing import List
-from canonical_eutectic import EutecticPathState
-from canonical_gradients import SegmentGradients
+
+try:
+    from multx_slicing_engine.canonical_types import EutecticPathState
+    from multx_slicing_engine.canonical_gradients import SegmentGradients
+except ImportError:
+    from canonical_types import EutecticPathState
+    from canonical_gradients import SegmentGradients
 
 
 @dataclass
