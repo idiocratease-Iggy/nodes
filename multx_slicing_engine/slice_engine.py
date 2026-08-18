@@ -1,19 +1,19 @@
-# slice_engine.py
+from __future__ import annotations
 
-from typing import List
-from evaluate_recovery import evaluate_at_recovery, SliceResult
-from canonical_gradients import compute_segment_gradients
-from canonical_eutectic import EutecticPathState
+from typing import Iterable
 
 
-def compute_slices(state: EutecticPathState,
-                   slice_recoveries: List[float]) -> List[SliceResult]:
-
-    segment_grads = compute_segment_gradients(state)
-    results = []
-
-    for R in slice_recoveries:
-        res = evaluate_at_recovery(state, segment_grads, R)
-        results.append(res)
-
-    return results
+def compute_slices(state, slice_R: Iterable[float]):
+    """Return slice metadata for the requested recovery cuts."""
+    slices = []
+    for target in list(slice_R):
+        selected = None
+        for seg in state.segments:
+            if seg.end_R <= target <= seg.start_R:
+                selected = seg
+                break
+        if selected is None:
+            slices.append({"R": float(target), "segment_index": None, "segment": None})
+        else:
+            slices.append({"R": float(target), "segment_index": selected.index, "segment": selected})
+    return slices
