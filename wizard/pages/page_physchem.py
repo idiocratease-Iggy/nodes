@@ -47,6 +47,9 @@ class PagePhysChem(QWizardPage):
         super().__init__()
         self.model = model
         self.setTitle("PhysChem Generator")
+        self._plot_window_pos = None
+        self._plot_window = None
+        self.destroyed.connect(self._close_plot_window)
 
         main_layout = QVBoxLayout(self)
 
@@ -74,8 +77,8 @@ class PagePhysChem(QWizardPage):
         single_layout.addLayout(main_layout2)
 
         plot_buttons_layout = QHBoxLayout()
-        self.btn_generate_single_plot = QPushButton("Generate New Single Plot")
-        self.btn_plot_loaded_data = QPushButton("Plot Loaded Data")
+        self.btn_generate_single_plot = QPushButton("Generate New Single Mixture Plot")
+        self.btn_plot_loaded_data = QPushButton("Plot from Loaded Single Mixture Data")
         plot_buttons_layout.addWidget(self.btn_generate_single_plot)
         plot_buttons_layout.addWidget(self.btn_plot_loaded_data)
         single_layout.addLayout(plot_buttons_layout)
@@ -84,8 +87,8 @@ class PagePhysChem(QWizardPage):
         self.btn_plot_loaded_data.clicked.connect(self.plot_loaded_data)
 
         json_layout = QHBoxLayout()
-        self.btn_write_json = QPushButton("Save JSON single mixture data file")
-        self.btn_read_json = QPushButton("Load JSON single mixture data file")
+        self.btn_write_json = QPushButton("Save Current Single Mixture PhysChem Data")
+        self.btn_read_json = QPushButton("Load Single Mixture PhysChem Data")
         json_layout.addWidget(self.btn_write_json)
         json_layout.addWidget(self.btn_read_json)
         single_layout.addLayout(json_layout)
@@ -146,13 +149,13 @@ class PagePhysChem(QWizardPage):
         multi_layout.addLayout(tm_layout)
 
 
-        self.btn_generate_matrix = QPushButton("Generate \"PhysChem Inputs\" data set")
+        self.btn_generate_matrix = QPushButton("Generate PhysChem Data Matrix")
         multi_layout.addWidget(self.btn_generate_matrix)
         self.btn_generate_matrix.clicked.connect(self.generate_matrix_data)
 
         json2_layout = QHBoxLayout()
-        self.btn_write_matrix_json = QPushButton("Save matrix JSON")
-        self.btn_read_matrix_json = QPushButton("Load matrix JSON")
+        self.btn_write_matrix_json = QPushButton("Save PhysChem Matrix (optional)")
+        self.btn_read_matrix_json = QPushButton("Load PhysChem Matrix")
         self.btn_read_matrix_json.setVisible(not self.chk_auto.isChecked())
         json2_layout.addWidget(self.btn_write_matrix_json)
         json2_layout.addWidget(self.btn_read_matrix_json)
@@ -165,6 +168,8 @@ class PagePhysChem(QWizardPage):
 
         self.current_mixture = None
         self.current_config = None
+        self.generated_mixture = None
+        self.loaded_mixture = None
 
         self.btn_write_json.clicked.connect(self.write_single_json)
         self.btn_read_json.clicked.connect(self.read_single_json)
@@ -203,7 +208,15 @@ class PagePhysChem(QWizardPage):
         config["modes"] = [str(component["mode"]) for component in components]
         return config
     
+    def _sync_model_state(self):
+        self.model.n_components = self.spin_ncomp.value()
+        self.model.main_component_level = self.spin_main_level.value() / 100.0
+        self.model.max_addition = self.spin_addition.value()
+        self.model.use_auto = self.chk_auto.isChecked()
+
     def generate_single_mixture(self):
+        self._sync_model_state()
+
         params = Params(
             n_components=self.spin_ncomp.value(),
             main_component_index=0,
@@ -218,8 +231,9 @@ class PagePhysChem(QWizardPage):
 
         config = build_configuration_json(params)
         mixtures = generate_mixture_set(config, num_systems=1)
-        self.current_mixture = mixtures[0]
-        return self.current_mixture
+        self.generated_mixture = mixtures[0]
+        self.current_mixture = self.generated_mixture
+        return self.generated_mixture
 
     def write_single_json(self):
         if self.current_mixture is None:
@@ -251,10 +265,11 @@ class PagePhysChem(QWizardPage):
             return None
 
         with open(path, "r") as f:
-            self.current_mixture = json.load(f)
+            self.loaded_mixture = json.load(f)
+            self.current_mixture = self.loaded_mixture
 
         print("[Single] Loaded mixture.")
-        return self.current_mixture
+        return self.loaded_mixture
 
 
     def write_multi_json(self):
@@ -284,7 +299,7 @@ class PagePhysChem(QWizardPage):
         return config_path
 
     def _sync_max_addition_spin(self):
-        self.model.n_components = self.spin_ncomp.value()
+        self._sync_model_state()
         max_allowed = max(0, self.spin_ncomp.value() // 2)
         self.spin_addition.setRange(0, max_allowed)
         if self.spin_addition.value() > max_allowed:
@@ -296,20 +311,49 @@ class PagePhysChem(QWizardPage):
         self.btn_read_matrix_json.setVisible(not is_auto)
         self.btn_write_matrix_json.setVisible(True)
 
+    def _close_plot_window(self):
+        if getattr(self, "_plot_window", None) is None:
+            return
+
+        try:
+            self._plot_window.close()
+        except Exception:
+            pass
+
+        try:
+            self._plot_window.deleteLater()
+        except Exception:
+            pass
+
+        self._plot_window = None
+        self._plot_window_pos = None
+
+    def closeEvent(self, event):
+        self._close_plot_window()
+        super().closeEvent(event)
+
     def generate_single_plot(self):
+        self._sync_model_state()
         mixture = self.generate_single_mixture()
         Rmax, composition_profile, solvent_profile = run_single_mixture(mixture)
         self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
 
     def plot_loaded_data(self):
-        if self.current_mixture is None:
+        if self.loaded_mixture is None:
             print("[Single] No loaded mixture available to plot.")
             return
 
-        Rmax, composition_profile, solvent_profile = run_single_mixture(self.current_mixture)
+        Rmax, composition_profile, solvent_profile = run_single_mixture(self.loaded_mixture)
         self._plot_window = run_gui(Rmax, composition_profile, solvent_profile)
 
     def show_plot(self):
+        # Close any existing plot window before generating a new one
+        if hasattr(self, "_plot_window") and self._plot_window is not None:
+            self._plot_window.close()
+            self._plot_window = None
+
+        self.plot_widget.clear()
+
         self.plot_loaded_data()
 
     def run_multxeu_gui(self):

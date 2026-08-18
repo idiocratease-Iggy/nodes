@@ -91,6 +91,11 @@ class WizardController(QWizard):
         self.currentIdChanged.connect(self._apply_page_size)
         self._apply_page_size(self.currentId())
 
+    def closeEvent(self, event):
+        if hasattr(self, "page_physchem"):
+            self.page_physchem._close_plot_window()
+        super().closeEvent(event)
+
     def _apply_page_size(self, page_id):
         width, height = self.page_sizes.get(page_id, (700, 620))
         self.resize(width, height)
