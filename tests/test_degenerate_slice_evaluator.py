@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -6,6 +7,7 @@ from multx_slicing_engine.canonical_eutectic import _normalize_summary_rows
 from multx_slicing_engine.canonical_gradients import compute_segment_gradients
 from multx_slicing_engine.canonical_types import EutecticPathState, Node, Segment
 from multx_slicing_engine.evaluate_recovery import evaluate_at_recovery
+from multx_slicing_engine.multi_mixture_harness import run_multi_mixture_harness_from_json
 
 
 def _make_state(segments):
@@ -61,3 +63,13 @@ def test_zeroed_component_stays_zero_during_interpolation():
     result = evaluate_at_recovery(state, compute_segment_gradients(state), 0.75)
 
     assert result.Xliq[1] == pytest.approx(0.0)
+
+
+def test_json_route_prints_slice_section(capsys):
+    json_path = Path(__file__).resolve().parents[1] / "data" / "physchem_matrix.json"
+
+    run_multi_mixture_harness_from_json(str(json_path), max_mixtures=1)
+
+    captured = capsys.readouterr().out
+    assert "SLICES FOR MIXTURE" in captured
+    assert "SLICES FOR ALL MIXTURES" in captured

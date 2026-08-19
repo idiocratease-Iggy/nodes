@@ -78,6 +78,8 @@ class WizardController(QWizard):
         self.page_physchem = PagePhysChem(self.model)
         self.page_generate_matrix = PageGenerateMatrix(self.model)
 
+        print("DEBUG: WizardController same model instance =", self.model is self.page_physchem.model and self.model is self.page_generate_matrix.model)
+
         # Add pages in order
         self.addPage(self.page_physchem)
         self.addPage(self.page_generate_matrix)
@@ -89,7 +91,9 @@ class WizardController(QWizard):
 
         self.setWindowTitle("NODES")
         self.currentIdChanged.connect(self._apply_page_size)
+        self.currentIdChanged.connect(self._sync_page_button_labels)
         self._apply_page_size(self.currentId())
+        self._sync_page_button_labels(self.currentId())
 
     def closeEvent(self, event):
         if hasattr(self, "page_physchem"):
@@ -99,6 +103,10 @@ class WizardController(QWizard):
     def _apply_page_size(self, page_id):
         width, height = self.page_sizes.get(page_id, (700, 620))
         self.resize(width, height)
+
+    def _sync_page_button_labels(self, page_id):
+        if self.currentPage() is self.page_generate_matrix:
+            self.page_generate_matrix.update_next_button_text()
 
 
 

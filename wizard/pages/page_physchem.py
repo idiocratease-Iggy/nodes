@@ -5,7 +5,7 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
     QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy, QTextEdit,
-    QFileDialog
+    QFileDialog, QRadioButton, QWizard
 )
 from PyQt6.QtCore import Qt
 from gui_main import run_gui
@@ -102,6 +102,8 @@ class PagePhysChem(QWizardPage):
         multi_group = QGroupBox("Explore: Multi")
         multi_layout = QVBoxLayout()
 
+        self.model.loaded_json_path = getattr(self.model, "loaded_json_path", None)
+
         self.chk_auto = QCheckBox("Auto generate PhysChem data")
         self.chk_auto.setChecked(self.model.use_auto)
         self.chk_auto.stateChanged.connect(self._toggle_matrix_buttons)
@@ -158,6 +160,7 @@ class PagePhysChem(QWizardPage):
         self.btn_write_matrix_json = QPushButton("Save PhysChem Matrix (optional)")
         self.btn_read_matrix_json = QPushButton("Load PhysChem Matrix")
         self.btn_read_matrix_json.setVisible(not self.chk_auto.isChecked())
+        self.btn_read_matrix_json.clicked.connect(self._open_json_matrix_dialog)
         json2_layout.addWidget(self.btn_write_matrix_json)
         json2_layout.addWidget(self.btn_read_matrix_json)
         multi_layout.addLayout(json2_layout)
@@ -275,6 +278,44 @@ class PagePhysChem(QWizardPage):
         return self.loaded_mixture
 
 
+    def update_next_button_text(self):
+        wizard = self.wizard()
+        if wizard is None:
+            return
+
+        label = "Build Data (JSON) >" if getattr(self.model, "loaded_json_path", None) else "Build Data (auto) >"
+        wizard.setButtonText(QWizard.WizardButton.NextButton, label)
+
+    def _switch_to_generated_matrix(self):
+        self.model.loaded_json_path = None
+        self.model.physchem_matrix = getattr(self.model, "physchem_matrix", [])
+        self.update_next_button_text()
+
+    def _open_json_matrix_dialog(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select PhysChem Matrix JSON",
+            str(DATA_DIR),
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not path:
+            self._switch_to_generated_matrix()
+            return
+
+        self.model.loaded_json_path = path
+        try:
+            with open(path, "r") as f:
+                self.model.physchem_matrix = json.load(f)
+        except Exception:
+            self.model.physchem_matrix = []
+            self.model.loaded_json_path = None
+            self._switch_to_generated_matrix()
+            raise
+
+        print("DEBUG: JSON file loaded from button, loaded_json_path =", self.model.loaded_json_path)
+        print("DEBUG: physchem_matrix set from JSON, len =", len(self.model.physchem_matrix))
+        self.update_next_button_text()
+
     def write_multi_json(self):
         self._sync_model_state()
 
@@ -329,13 +370,14 @@ class PagePhysChem(QWizardPage):
             },
         }
 
-        if self.wizard() is not None and hasattr(self.wizard(), "page_generate_matrix"):
-            mixtures = self.wizard().page_generate_matrix.generate_mixtures(config=config)
-            self.model.physchem_matrix = mixtures
-            return mixtures
-
+        # Only generate the matrix list and store it on the model here.
+        # Do not trigger the canonical-slice pipeline from this button.
         mixtures = generate_mixture_set(config, num_unique_mixtures=self.spin_systems.value())
         self.model.physchem_matrix = mixtures
+        self.model.loaded_json_path = None
+        print("DEBUG: PagePhysChem generate_matrix_data, len =", len(mixtures))
+        print("DEBUG: PagePhysChem model.physchem_matrix set, len =", len(self.model.physchem_matrix))
+        self.update_next_button_text()
         return mixtures
 
     def _sync_max_addition_spin(self):
@@ -350,6 +392,12 @@ class PagePhysChem(QWizardPage):
         is_auto = self.chk_auto.isChecked()
         self.btn_read_matrix_json.setVisible(not is_auto)
         self.btn_write_matrix_json.setVisible(True)
+        if is_auto:
+            self.model.loaded_json_path = None
+            self.model.physchem_matrix = getattr(self.model, "physchem_matrix", [])
+            self.update_next_button_text()
+        else:
+            self.update_next_button_text()
 
     def _close_plot_window(self):
         if getattr(self, "_plot_window", None) is None:

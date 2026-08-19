@@ -22,7 +22,8 @@
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel,
     QGroupBox, QRadioButton, QSpinBox, QCheckBox,
-    QWidget, QPushButton, QMessageBox, QSizePolicy
+    QWidget, QPushButton, QMessageBox, QSizePolicy,
+    QFileDialog, QWizard
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QPen, QFont
@@ -34,6 +35,10 @@ from pathlib import Path
 from models.multxeu_model import MultXeuModel
 from mixture_generator import generate_mixture_set
 from input_writer import write_json
+from multx_slicing_engine.multi_mixture_harness import (
+    run_multi_mixture_harness_from_json,
+    run_multi_mixture_harness_from_gui,
+)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
@@ -192,6 +197,15 @@ class PageGenerateMatrix(QWizardPage):
         format_group.setLayout(format_layout)
         left_layout.addWidget(format_group)
 
+        self.generate_matrix_radio = QRadioButton("Generate matrix in memory")
+        self.generate_matrix_radio.setChecked(True)
+        self.generate_matrix_radio.clicked.connect(self.update_next_button_text)
+        if getattr(self.model, "loaded_json_path", None):
+            self.generate_matrix_radio.setChecked(False)
+        mode_layout = QHBoxLayout()
+        mode_layout.addWidget(self.generate_matrix_radio)
+        left_layout.addLayout(mode_layout)
+
         # -----------------------------------------------------
         # Lower options: matrix behavior, replicates, and analytical error
         # -----------------------------------------------------
@@ -267,6 +281,21 @@ class PageGenerateMatrix(QWizardPage):
         # Default plate
         self.rb_6x4.setChecked(True)
         self.update_preview(4, 6)
+
+    def update_next_button_text(self):
+        wizard = self.wizard()
+        if wizard is None:
+            return
+
+        label = "Build Data (JSON) >" if getattr(self.model, "loaded_json_path", None) else "Build Data (auto) >"
+        wizard.setButtonText(QWizard.WizardButton.NextButton, label)
+        next_button = wizard.button(QWizard.WizardButton.NextButton)
+        if next_button is not None:
+            next_button.update()
+        wizard.update()
+
+    def _handle_json_mode_toggle(self, checked):
+        self.update_next_button_text()
 
     # ---------------------------------------------------------
     # Preview update logic (unchanged)
@@ -363,5 +392,30 @@ class PageGenerateMatrix(QWizardPage):
         self.model.plate_cols = cols
         self.model.randomize_design = self.chk_randomize.isChecked()
         self.model.fill_to_full_plates = self.checkbox_fill_full.isChecked()
+
+        print("DEBUG: NEXT pressed")
+        print("DEBUG: physchem_matrix =", self.model.physchem_matrix)
+        print("DEBUG: loaded_json_path =", getattr(self.model, "loaded_json_path", None))
+
+        json_path = getattr(self.model, "loaded_json_path", None)
+        matrix = getattr(self.model, "physchem_matrix", None)
+
+        if json_path:
+            if json_path is None:
+                json_path = str(DATA_DIR / "physchem_matrix.json")
+            if not isinstance(matrix, list) or not matrix:
+                try:
+                    with open(json_path, "r") as f:
+                        matrix = json.load(f)
+                    self.model.physchem_matrix = matrix
+                except Exception as exc:
+                    raise ValueError(f"Could not load matrix JSON '{json_path}': {exc}") from exc
+            print("DEBUG: GUI branch -> run_multi_mixture_harness_from_json, path =", json_path)
+            self.model.canonical_results = run_multi_mixture_harness_from_json(json_path)
+        else:
+            if not isinstance(matrix, list) or not matrix:
+                raise ValueError("No matrix data available. Generate a matrix or load a JSON file first.")
+            print("DEBUG: GUI branch -> run_multi_mixture_harness_from_gui, len =", len(matrix))
+            self.model.canonical_results = run_multi_mixture_harness_from_gui(matrix)
 
         return True
