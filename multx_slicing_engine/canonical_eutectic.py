@@ -70,6 +70,37 @@ def _extract_node_recoveries(result: Any) -> List[float]:
     return [to_frac(r) for r in node_recoveries]
 
 
+def _normalize_summary_rows(summary_matrix: List[List[float]]) -> List[List[float]]:
+    """Deduplicate equal recoveries and keep the canonical rows in descending R order."""
+    rows: List[List[float]] = []
+    for row in summary_matrix:
+        if not row:
+            continue
+        recovery = float(row[0])
+        if not rows:
+            rows.append([recovery] + list(row[1:]))
+            continue
+
+        prev_recovery = float(rows[-1][0])
+        if abs(recovery - prev_recovery) <= 1e-12:
+            rows[-1] = [recovery] + list(row[1:])
+        else:
+            rows.append([recovery] + list(row[1:]))
+
+    rows.sort(key=lambda row: float(row[0]), reverse=True)
+    unique_rows: List[List[float]] = []
+    for row in rows:
+        recovery = float(row[0])
+        if not unique_rows:
+            unique_rows.append(list(row))
+            continue
+        if abs(recovery - float(unique_rows[-1][0])) <= 1e-12:
+            unique_rows[-1] = list(row)
+        else:
+            unique_rows.append(list(row))
+    return unique_rows
+
+
 def _build_summary_matrix(X: List[float], nodes_mix: List[List[float]], node_recoveries: List[float]) -> List[List[float]]:
     """Build the same summary_matrix shape used by test_run.py."""
     recoveries_from_steps = [1.0]
@@ -172,16 +203,23 @@ def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solv
             )
         )
 
-    summary_matrix = _build_summary_matrix(mix_input.X, nodes_mix, node_recoveries)
+    summary_matrix = _normalize_summary_rows(_build_summary_matrix(mix_input.X, nodes_mix, node_recoveries))
     RelSolVol = _build_relsolvol(summary_matrix)
 
     segments: List[Segment] = []
     for idx, (start_row, end_row) in enumerate(zip(summary_matrix[:-1], summary_matrix[1:])):
+        start_R = float(start_row[0])
+        end_R = float(end_row[0])
+        if abs(start_R - end_R) <= 1e-12:
+            continue
+        if start_R < end_R:
+            start_R, end_R = end_R, start_R
+
         segments.append(
             Segment(
                 index=idx,
-                start_R=float(start_row[0]),
-                end_R=float(end_row[0]),
+                start_R=start_R,
+                end_R=end_R,
                 Xliq_start=list(start_row[1:]),
                 Xliq_end=list(end_row[1:]),
                 solvent_start=float(RelSolVol[idx]),
@@ -189,6 +227,10 @@ def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solv
                 metadata={"node_index": idx},
             )
         )
+
+    segments.sort(key=lambda seg: seg.start_R, reverse=True)
+    for idx, seg in enumerate(segments):
+        seg.index = idx
 
     return EutecticPathState(
         solver=str(solver),

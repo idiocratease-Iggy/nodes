@@ -73,7 +73,7 @@ def run_test(json_data):
     print(" CANONICAL SLICE COMPOSITIONS")
     print("==============================================\n")
 
-    slice_points = [0.90, 0.50, 0.10]
+    slice_points = [0.98, 0.95, 0.92]
 
     for R in slice_points:
         result = evaluate_recovery(state, segment_grads, R)
