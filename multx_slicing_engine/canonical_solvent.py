@@ -103,10 +103,12 @@ def compute_relsolvol_from_cascade(
 
     # ------------------------------------------------------------
     # RelSolVol: cumulative solvent requirement
+    # NOTE: M2L is already a fraction (0..1), not a percent. Use the
+    # corrected fractional mass-transfer term directly; do not divide by 100.
     # ------------------------------------------------------------
     RelSolVol: List[float] = [0.0]
     for i in range(1, len(RelSol)):
-        RelSolVol.append(RelSolVol[-1] + RelSol[i])
+        RelSolVol.append(RelSolVol[-1] + RelSol[i] * M2L[i])
 
     # ------------------------------------------------------------
     # Return node-level RelSolVol (exclude feed and final pure)

@@ -8,6 +8,8 @@ def _segment_for_recovery(segments, R: float):
     for seg in segments:
         if abs(seg.start_R - seg.end_R) <= 1e-12:
             continue
+        # Direct recovery lookup only; no solvent plateau or degenerate_main_pair
+        # adjustment is applied in the canonical slice logic.
         if seg.end_R - 1e-12 <= R <= seg.start_R + 1e-12:
             candidates.append(seg)
 

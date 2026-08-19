@@ -34,8 +34,8 @@ class GradientEngine:
             R1 = seg.end_R
             X0 = seg.Xliq_start
             X1 = seg.Xliq_end
-            S0 = seg.solvent_start
-            S1 = seg.solvent_end
+            S0 = float(seg.solvent_start)
+            S1 = float(seg.solvent_end)
 
             dR = R1 - R0
             if abs(dR) < 1e-12:
@@ -46,6 +46,8 @@ class GradientEngine:
             else:
                 gradients = [(x1 - x0) / dR for x0, x1 in zip(X0, X1)]
                 intercepts = [x0 - m * R0 for x0, m in zip(X0, gradients)]
+                # Canonical solvent gradients must use the corrected solvent values
+                # directly; no plateau or degeneracy-adjustment logic is applied.
                 solvol_grad = (S1 - S0) / dR
                 solvol_int = S0 - solvol_grad * R0
 
@@ -59,6 +61,17 @@ class GradientEngine:
                 end_R=R1,
             )
             self.segments.append(sg)
+
+    def solvent_value_at_recovery(self, R: float) -> float:
+        """Evaluate the segment solvent value at a given recovery using the direct linear form."""
+        for seg in self.segments:
+            if seg.start_R >= R >= seg.end_R or seg.start_R <= R <= seg.end_R:
+                if abs(seg.end_R - seg.start_R) < 1e-12:
+                    return float(seg.solvol_int)
+                return seg.solvol_grad * R + seg.solvol_int
+        if not self.segments:
+            return 0.0
+        return self.segments[-1].solvol_grad * R + self.segments[-1].solvol_int
 
     def get_segment_gradients(self) -> List[SegmentGradients]:
         return self.segments

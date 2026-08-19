@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
         )
         self.impurity_plot.plot_widget.setLimits(yMin=0)
         self.solvent_plot = self.ProfilePlotWidget(
-            "Relative Solvent Volume", "Recovery (%)", "Solvent Volume"
+            "Relative Solvent Volume", "Recovery (%)", "Relative Solvent Volume"
         )
         self.solvent_plot.plot_widget.setLimits(yMin=0)
 
@@ -310,7 +310,8 @@ class MainWindow(QMainWindow):
         self.impurity_plot.update_legend(
             "Impurities: " + ", ".join(impurity_labels) if impurity_labels else "Impurities: none"
         )
-        self.solvent_plot.update_legend(f"RelSolVol: {self.solvent_profile[0][1]:.2f}")
+        recovery_index = min(len(self.solvent_profile) - 1, max(0, self.slider.value()))
+        self.solvent_plot.update_legend(f"RelSolVol: {self.solvent_profile[recovery_index][1]:.2f}")
         self.comp1_plot.set_cursor_position(1.0)
         self.impurity_plot.set_cursor_position(1.0)
         self.solvent_plot.set_cursor_position(1.0)
@@ -419,6 +420,12 @@ class MainWindow(QMainWindow):
                 pen=pg.mkPen(color, width=2),
             )
 
+        self.solvent_plot.plot_widget.clear()
+        self.solvent_plot.plot_widget.enableAutoRange(axis='y')
+        self.solvent_plot.plot_widget.enableAutoRange(axis='x')
+        self.solvent_plot.plot_widget.setLabel('left', "Relative Solvent Volume")
+        self.solvent_plot.plot_widget.addItem(self.solvent_plot.cursor)
+        self.solvent_plot.plot_widget.addItem(self.solvent_plot.Rmax_line)
         self.solvent_plot.plot_widget.plot(R_solv, V_solv, pen=pg.mkPen("cyan", width=2))
 
     def on_slider_changed(self, value):
@@ -435,7 +442,9 @@ class MainWindow(QMainWindow):
             self.composition_profile[recovery_index][1][idx] * 100
             for idx in self.impurity_components
         ]
+
         relsol = self.solvent_profile[recovery_index][1]
+        self.solvent_plot.update_legend(f"RelSolVol: {relsol:.2f}")
 
         text = (
             f"Recovery (%): {R * 100:.2f}\n"
@@ -448,6 +457,7 @@ class MainWindow(QMainWindow):
         self.comp1_plot.set_cursor_position(R)
         self.impurity_plot.set_cursor_position(R)
         self.solvent_plot.set_cursor_position(R)
+
 
         
 

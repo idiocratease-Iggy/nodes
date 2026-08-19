@@ -232,3 +232,17 @@ def test_degnerate_main_pair_stays_constant_below_rmax():
         if any(x <= 0.92 for x in x_data):
             assert max(y_data) <= 50.5
             assert min(y_data) >= 47.5
+
+
+def test_solvent_profile_is_not_collapsed_to_near_zero():
+    app = QApplication.instance() or QApplication([])
+    with open("data/single_mixture-7 Comp 2 pair ent V2.json", "r") as f:
+        mixture = __import__("json").load(f)
+
+    from single_mixture_solver import run_single_mixture
+    _, _, solvent_profile = run_single_mixture(mixture)
+
+    values = [v for _, v in solvent_profile]
+    assert values
+    assert max(values) > 1e-3
+    assert max(values) < 10.0

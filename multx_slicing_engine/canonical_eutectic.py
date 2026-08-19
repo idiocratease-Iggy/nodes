@@ -120,7 +120,7 @@ def _build_summary_matrix(X: List[float], nodes_mix: List[List[float]], node_rec
 
 
 def _build_relsolvol(summary_matrix: List[List[float]]) -> List[float]:
-    """Match the RelSol / RelSolVol logic exactly as in test_run.py."""
+    """Compute the weighted RelSolVol used by the corrected single-mixture solver."""
     recoveries = [row[0] for row in summary_matrix]
     compositions = [row[1:] for row in summary_matrix]
 
@@ -161,9 +161,13 @@ def _build_relsolvol(summary_matrix: List[List[float]]) -> List[float]:
 
         RelSol.append(M2L[i] / removed_fraction)
 
+    # Match the corrected single-mixture solver: the solvent requirement is weighted
+    # by the fractional mass removed in that step, not by the raw RelSol ratio alone.
     RelSolVol = [0.0]
+    running = 0.0
     for i in range(1, len(RelSol)):
-        RelSolVol.append(RelSolVol[-1] + RelSol[i])
+        running += RelSol[i] * M2L[i]
+        RelSolVol.append(running)
 
     return RelSolVol
 

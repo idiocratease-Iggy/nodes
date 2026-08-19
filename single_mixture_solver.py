@@ -148,20 +148,36 @@ def _solve_mixture(mix, use_vba: bool = True):
 
         RelSol.append(M2L[i] / removed_fraction)
 
-    RelSolVol = [0.0]
-    for i in range(1, len(RelSol)):
-        RelSolVol.append(RelSolVol[-1] + RelSol[i])
+# --- Correct RelSolVol calculation (weighted by M2L) ---
+# M2L is already a fractional recovery drop (0..1), not a percent value.
+# Dividing by 100.0 here artificially shrinks the solvent demand by 100x.
+    RelSolVol = []
+    running = 0.0
+
+    for i in range(len(RelSol)):
+        # M2L is in fraction units, so use it directly.
+        running += RelSol[i] * M2L[i]
+        RelSolVol.append(running)
+
+    # --- Extend summary with M2L and RelSolVol ---
 
     for i in range(len(recoveries)):
-        extended_summary.append(summary_matrix_from_model[i] + [M2L[i], RelSolVol[i]])
+        extended_summary.append(
+            summary_matrix_from_model[i] + [M2L[i], RelSolVol[i]]
+        )
+
+    # --- Build solvent cascade for plotting / gradient engine ---
 
     full_recoveries = [row[0] for row in summary_matrix_from_model]
+
     solvent_cascade = {
         "cumR": full_recoveries,
         "solvent": RelSolVol,
     }
+
     solv_eng = SolventGradientEngine(solvent_cascade)
     solv_eng.compute_gradients()
+
 
     composition_profile = []
     solvent_profile = []

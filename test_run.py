@@ -177,7 +177,10 @@ def main(use_vba: bool = True):
 
     RelSolVol = [0.0]
     for i in range(1, len(RelSol)):
-        RelSolVol.append(RelSolVol[-1] + RelSol[i])
+        # M2L is in percent, convert to fraction
+        m2l_frac = M2L[i] / 100.0
+        RelSolVol.append(RelSolVol[-1] + RelSol[i] * m2l_frac)
+
 
     for i in range(len(recoveries)):
         extended_summary.append(summary_matrix_from_model[i] + [M2L[i], RelSolVol[i]])
