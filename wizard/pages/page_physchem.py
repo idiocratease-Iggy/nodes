@@ -128,6 +128,7 @@ class PagePhysChem(QWizardPage):
         self.spin_systems = QSpinBox()
         self.spin_systems.setRange(1, 100)
         self.spin_systems.setValue(self.model.num_systems)
+        self.spin_systems.valueChanged.connect(self._sync_model_state)
         sys_layout.addWidget(self.spin_systems)
         multi_layout.addLayout(sys_layout)
 
@@ -213,6 +214,8 @@ class PagePhysChem(QWizardPage):
         self.model.main_component_level = self.spin_main_level.value() / 100.0
         self.model.max_addition = self.spin_addition.value()
         self.model.use_auto = self.chk_auto.isChecked()
+        self.model.num_unique_mixtures = self.spin_systems.value()
+        self.model.num_systems = self.spin_systems.value()
 
     def generate_single_mixture(self):
         self._sync_model_state()
@@ -273,30 +276,67 @@ class PagePhysChem(QWizardPage):
 
 
     def write_multi_json(self):
-        params = Params(
-            n_components=self.spin_ncomp.value(),
-            main_component_index=0,
-            main_component_level=self.spin_main_level.value() / 100.0,
-            stochastic_variance=self.spin_variance.value() / 100.0,
-            max_addition_compounds=self.spin_addition.value(),
-            tm_base=float(self.spin_tm_base.value()),
-            tm_sd_factor=1.0,
-            dh_sd_factor=1.0,
-            max_solvent_volumes=self.spin_slices.value(),
-            
-        )
+        self._sync_model_state()
 
-        json_data = build_configuration_json(params)
-        path = str(DATA_DIR / "physchem_config.json")
-        write_json(path, json_data)
-        print(f"[PhysChem] Wrote physchem_config.json → {path}")
+        if not getattr(self.model, "physchem_matrix", None):
+            config = {
+                "metadata": {
+                    "n_components": self.spin_ncomp.value(),
+                    "main_component_index": 0,
+                    "main_component_level": self.spin_main_level.value() / 100.0,
+                    "stochastic_variance": self.spin_variance.value() / 100.0,
+                    "max_addition_compounds": self.spin_addition.value(),
+                    "num_unique_mixtures": self.spin_systems.value(),
+                },
+                "physchem_rules": {
+                    "tm_base": float(self.spin_tm_base.value()),
+                    "tm_sd_factor": 1.0,
+                    "dh_sd_factor": 1.0,
+                },
+                "slicing": {
+                    "max_solvent_volumes": self.spin_slices.value(),
+                },
+            }
+            self.model.physchem_matrix = generate_mixture_set(
+                config,
+                num_unique_mixtures=self.spin_systems.value(),
+            )
+
+        path = str(DATA_DIR / "physchem_matrix.json")
+        write_json(path, self.model.physchem_matrix)
+        print(f"[PhysChem] Wrote physchem_matrix.json → {path}")
         return path
 
     def generate_matrix_data(self):
-        config_path = self.write_multi_json()
+        self._sync_model_state()
+
+        config = {
+            "metadata": {
+                "n_components": self.spin_ncomp.value(),
+                "main_component_index": 0,
+                "main_component_level": self.spin_main_level.value() / 100.0,
+                "stochastic_variance": self.spin_variance.value() / 100.0,
+                "max_addition_compounds": self.spin_addition.value(),
+                "num_unique_mixtures": self.spin_systems.value(),
+            },
+            "physchem_rules": {
+                "tm_base": float(self.spin_tm_base.value()),
+                "tm_sd_factor": 1.0,
+                "dh_sd_factor": 1.0,
+            },
+            "slicing": {
+                "max_solvent_volumes": self.spin_slices.value(),
+            },
+        }
+
         if self.wizard() is not None and hasattr(self.wizard(), "page_generate_matrix"):
-            self.wizard().page_generate_matrix.generate_mixtures(config_path=config_path)
-        return config_path
+            mixtures = self.wizard().page_generate_matrix.generate_mixtures(config=config)
+            self.model.physchem_matrix = mixtures
+            return mixtures
+
+        mixtures = generate_mixture_set(config, num_unique_mixtures=self.spin_systems.value())
+        self.model.physchem_matrix = mixtures
+        return mixtures
 
     def _sync_max_addition_spin(self):
         self._sync_model_state()

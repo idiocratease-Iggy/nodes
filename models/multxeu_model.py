@@ -22,6 +22,7 @@ class MultXeuModel:
     max_addition: int = 0
     max_slices: int = 3
     modulation_percent: int = 20
+    num_unique_mixtures: int = 10
     num_systems: int = 10
 
     # PhysChem data (to be filled later)

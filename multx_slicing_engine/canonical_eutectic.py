@@ -232,13 +232,24 @@ def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solv
     for idx, seg in enumerate(segments):
         seg.index = idx
 
+    rmax = float(result.get("recovery", {}).get("Rmax", summary_matrix[-2][0] if len(summary_matrix) > 1 else 1.0))
+    solvent_at_rmax = 0.0
+    if segments:
+        for seg in segments:
+            if seg.start_R >= rmax and seg.end_R <= rmax:
+                solvent_at_rmax = float(seg.solvent_end)
+                break
+        if solvent_at_rmax == 0.0:
+            solvent_at_rmax = float(segments[-1].solvent_end)
+
     return EutecticPathState(
         solver=str(solver),
         initial_mixture=mix_input,
         nodes=nodes,
         segments=segments,
-        Rmax=float(result.get("recovery", {}).get("Rmax", summary_matrix[-2][0] if len(summary_matrix) > 1 else 1.0)),
+        Rmax=rmax,
         final_purity=float(result.get("recovery", {}).get("final_purity", 0.0)),
         tk_nodes=list(tk_nodes),
         degenerate_cascade=False,
+        solvent_at_Rmax=solvent_at_rmax,
     )

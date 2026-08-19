@@ -36,3 +36,4 @@ class EutecticPathState:
     final_purity: float
     tk_nodes: List[float]
     degenerate_cascade: bool
+    solvent_at_Rmax: float = 0.0

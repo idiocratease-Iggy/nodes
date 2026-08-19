@@ -17,16 +17,20 @@ def maybe_make_degenerate(component_props, degeneracy_probability=0.1):
     return component_props
 
 
-def generate_mixture_set(config: dict, num_systems: int):
+def generate_mixture_set(config: dict, num_systems: int | None = None, num_unique_mixtures: int | None = None):
     """Generate fresh per-mixture component data from a clean config JSON."""
     mixtures = []
     prefix = datetime.now().strftime("%y%m%d")
+
+    if num_unique_mixtures is None:
+        num_unique_mixtures = num_systems if num_systems is not None else 1
+    num_unique_mixtures = int(num_unique_mixtures)
 
     clean_config = copy.deepcopy(config)
     params = clean_config.get("metadata", {})
     physchem_rules = clean_config.get("physchem_rules", {})
 
-    for i in range(1, num_systems + 1):
+    for i in range(1, num_unique_mixtures + 1):
         m = copy.deepcopy(clean_config)
 
         Xc, add_indices = generate_composition(

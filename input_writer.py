@@ -188,6 +188,7 @@ def build_configuration_json(params: Params):
             "main_component_level": params.main_component_level,
             "stochastic_variance": params.stochastic_variance,
             "max_addition_compounds": params.max_addition_compounds,
+            "num_unique_mixtures": getattr(params, "num_unique_mixtures", 10),
             #"degeneracy_enabled": params.degeneracy_enabled,
             #"notes": params.notes,
         },

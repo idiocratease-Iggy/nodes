@@ -292,33 +292,53 @@ class PageGenerateMatrix(QWizardPage):
     # ---------------------------------------------------------
 
     
-    def generate_mixtures(self, config_path=None):
+    def generate_mixtures(self, config_path=None, config=None):
         self.model.replicate_percent = self.spin_repl.value() if self.chk_repl.isChecked() else 0
         self.model.analytical_error_percent = self.spin_error.value() if self.chk_error.isChecked() else 0
         self.validatePage()
 
-        if config_path is None:
-            config_path = str(DATA_DIR / "physchem_config.json")
-
-        if not os.path.exists(config_path):
-            wizard = self.wizard()
-            if wizard is not None and hasattr(wizard, "page_physchem"):
-                wizard.page_physchem.write_multi_json()
+        if config is None:
+            if config_path is None:
                 config_path = str(DATA_DIR / "physchem_config.json")
 
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"No config file found at: {config_path}")
+            if not os.path.exists(config_path):
+                wizard = self.wizard()
+                if wizard is not None and hasattr(wizard, "page_physchem"):
+                    wizard.page_physchem._sync_model_state()
+                    params = wizard.page_physchem.build_single_config() if False else None
+                    config = {
+                        "metadata": {
+                            "n_components": wizard.page_physchem.spin_ncomp.value(),
+                            "main_component_index": 0,
+                            "main_component_level": wizard.page_physchem.spin_main_level.value() / 100.0,
+                            "stochastic_variance": wizard.page_physchem.spin_variance.value() / 100.0,
+                            "max_addition_compounds": wizard.page_physchem.spin_addition.value(),
+                            "num_unique_mixtures": wizard.page_physchem.spin_systems.value(),
+                        },
+                        "physchem_rules": {
+                            "tm_base": float(wizard.page_physchem.spin_tm_base.value()),
+                            "tm_sd_factor": 1.0,
+                            "dh_sd_factor": 1.0,
+                        },
+                        "slicing": {
+                            "max_solvent_volumes": wizard.page_physchem.spin_slices.value(),
+                        },
+                    }
+                else:
+                    raise FileNotFoundError(f"No config file found at: {config_path}")
+            else:
+                with open(config_path, "r") as f:
+                    config = json.load(f)
 
-        with open(config_path, "r") as f:
-            config = json.load(f)
+        num_unique_mixtures = getattr(self.model, "num_unique_mixtures", getattr(self.model, "num_systems", 1))
+        self.model.num_unique_mixtures = int(num_unique_mixtures)
+        self.model.num_systems = int(num_unique_mixtures)
 
-        num = self.model.num_systems if hasattr(self.model, "num_systems") else 1
-        mixtures = generate_mixture_set(config, num)
+        mixtures = generate_mixture_set(config, num_unique_mixtures=num_unique_mixtures)
+        self.model.physchem_matrix = mixtures
 
-        matrix_path = str(DATA_DIR / "physchem_matrix.json")
-        write_json(matrix_path, mixtures)
-
-        print(f"[Matrix] Wrote {num} mixtures → {matrix_path}")
+        print(f"[Matrix] Generated {len(mixtures)} mixtures in memory")
+        return mixtures
 
 
     # ---------------------------------------------------------

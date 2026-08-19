@@ -1,11 +1,12 @@
 {
-  "config_id": "260817",
+  "config_id": "260819",
   "metadata": {
-    "n_components": 9,
+    "n_components": 4,
     "main_component_index": 0,
     "main_component_level": 0.8,
     "stochastic_variance": 0.2,
-    "max_addition_compounds": 3
+    "max_addition_compounds": 0,
+    "num_unique_mixtures": 5
   },
   "physchem_rules": {
     "tm_base": 130.0,
