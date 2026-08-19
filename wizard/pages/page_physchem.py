@@ -356,9 +356,17 @@ class PagePhysChem(QWizardPage):
                 num_unique_mixtures=self.spin_systems.value(),
             )
 
-        path = str(DATA_DIR / "physchem_matrix.json")
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save PhysChem Matrix JSON",
+            str(DATA_DIR / "physchem_matrix.json"),
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not path:
+            return None
+
         write_json(path, self.model.physchem_matrix)
-        print(f"[PhysChem] Wrote physchem_matrix.json → {path}")
+        print(f"[PhysChem] Wrote custom matrix → {path}")
         return path
 
     def generate_matrix_data(self):

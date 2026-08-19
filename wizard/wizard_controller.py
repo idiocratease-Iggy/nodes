@@ -116,6 +116,16 @@ class WizardController(QWizard):
     def _sync_page_button_visibility(self, page_id):
         next_button = self.button(QWizard.WizardButton.NextButton)
         back_button = self.button(QWizard.WizardButton.BackButton)
+
+        if self.currentPage() is self.page_generate_matrix:
+            if next_button is not None:
+                next_button.setVisible(False)
+                next_button.setEnabled(False)
+            if back_button is not None:
+                back_button.setVisible(True)
+                back_button.setEnabled(True)
+            return
+
         valid = self._is_navigation_ready()
 
         if next_button is not None:
