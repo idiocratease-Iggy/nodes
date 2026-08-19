@@ -283,13 +283,26 @@ class PagePhysChem(QWizardPage):
         if wizard is None:
             return
 
+        next_button = wizard.button(QWizard.WizardButton.NextButton)
+        if next_button is None:
+            return
+
         label = "Build Data (JSON) >" if getattr(self.model, "loaded_json_path", None) else "Build Data (auto) >"
-        wizard.setButtonText(QWizard.WizardButton.NextButton, label)
+        next_button.setText(label)
+
+    def _refresh_wizard_navigation(self):
+        wizard = self.wizard()
+        if wizard is None:
+            return
+
+        self.update_next_button_text()
+        if hasattr(wizard, "_sync_page_button_visibility"):
+            wizard._sync_page_button_visibility(wizard.currentId())
 
     def _switch_to_generated_matrix(self):
         self.model.loaded_json_path = None
         self.model.physchem_matrix = getattr(self.model, "physchem_matrix", [])
-        self.update_next_button_text()
+        self._refresh_wizard_navigation()
 
     def _open_json_matrix_dialog(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -314,7 +327,7 @@ class PagePhysChem(QWizardPage):
 
         print("DEBUG: JSON file loaded from button, loaded_json_path =", self.model.loaded_json_path)
         print("DEBUG: physchem_matrix set from JSON, len =", len(self.model.physchem_matrix))
-        self.update_next_button_text()
+        self._refresh_wizard_navigation()
 
     def write_multi_json(self):
         self._sync_model_state()
@@ -377,7 +390,7 @@ class PagePhysChem(QWizardPage):
         self.model.loaded_json_path = None
         print("DEBUG: PagePhysChem generate_matrix_data, len =", len(mixtures))
         print("DEBUG: PagePhysChem model.physchem_matrix set, len =", len(self.model.physchem_matrix))
-        self.update_next_button_text()
+        self._refresh_wizard_navigation()
         return mixtures
 
     def _sync_max_addition_spin(self):
@@ -395,9 +408,7 @@ class PagePhysChem(QWizardPage):
         if is_auto:
             self.model.loaded_json_path = None
             self.model.physchem_matrix = getattr(self.model, "physchem_matrix", [])
-            self.update_next_button_text()
-        else:
-            self.update_next_button_text()
+        self._refresh_wizard_navigation()
 
     def _close_plot_window(self):
         if getattr(self, "_plot_window", None) is None:

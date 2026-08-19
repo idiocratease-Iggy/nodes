@@ -92,8 +92,10 @@ class WizardController(QWizard):
         self.setWindowTitle("NODES")
         self.currentIdChanged.connect(self._apply_page_size)
         self.currentIdChanged.connect(self._sync_page_button_labels)
+        self.currentIdChanged.connect(self._sync_page_button_visibility)
         self._apply_page_size(self.currentId())
         self._sync_page_button_labels(self.currentId())
+        self._sync_page_button_visibility(self.currentId())
 
     def closeEvent(self, event):
         if hasattr(self, "page_physchem"):
@@ -106,8 +108,27 @@ class WizardController(QWizard):
 
     def _sync_page_button_labels(self, page_id):
         if self.currentPage() is self.page_generate_matrix:
-            self.page_generate_matrix.update_next_button_text()
+            if not self.page_generate_matrix.isFinalPage():
+                self.page_generate_matrix.update_next_button_text()
+        elif self.currentPage() is self.page_physchem:
+            self.page_physchem.update_next_button_text()
 
+    def _sync_page_button_visibility(self, page_id):
+        next_button = self.button(QWizard.WizardButton.NextButton)
+        back_button = self.button(QWizard.WizardButton.BackButton)
+        valid = self._is_navigation_ready()
+
+        if next_button is not None:
+            next_button.setVisible(valid)
+            next_button.setEnabled(valid)
+        if back_button is not None:
+            back_button.setVisible(valid)
+            back_button.setEnabled(valid)
+
+    def _is_navigation_ready(self):
+        matrix_ready = bool(getattr(self.model, "physchem_matrix", None))
+        json_ready = bool(getattr(self.model, "loaded_json_path", None))
+        return matrix_ready or json_ready
 
 
 class DesignWizard(QWizard):

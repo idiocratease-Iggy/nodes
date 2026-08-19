@@ -125,6 +125,7 @@ class PageGenerateMatrix(QWizardPage):
         super().__init__()
         self.model = model
         self.setTitle("Generate Experimental Matrix")
+        self.setFinalPage(True)
 
         main_layout = QHBoxLayout(self)
 
@@ -283,6 +284,9 @@ class PageGenerateMatrix(QWizardPage):
         self.update_preview(4, 6)
 
     def update_next_button_text(self):
+        if self.isFinalPage():
+            return
+
         wizard = self.wizard()
         if wizard is None:
             return

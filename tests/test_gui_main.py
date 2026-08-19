@@ -3,7 +3,7 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QWizard
 
 from gui_main import MainWindow, run_gui
 from wizard.pages.page_physchem import PagePhysChem
@@ -53,6 +53,25 @@ def test_page_physchem_closes_plot_when_closed():
     assert event.isAccepted()
     assert page._plot_window is None
     assert not plot.isVisible()
+
+
+def test_wizard_hides_navigation_until_matrix_or_json_ready():
+    app = QApplication.instance() or QApplication([])
+    wizard = WizardController()
+    next_button = wizard.button(QWizard.WizardButton.NextButton)
+    back_button = wizard.button(QWizard.WizardButton.BackButton)
+
+    assert next_button is not None
+    assert back_button is not None
+    assert not next_button.isVisible()
+    assert not back_button.isVisible()
+
+    wizard.model.loaded_json_path = "data/test.json"
+    wizard._sync_page_button_visibility()
+
+    assert next_button.isVisible()
+    assert back_button.isVisible()
+    assert wizard.buttonText(QWizard.WizardButton.NextButton) == "Build Data (JSON) >"
 
 
 def test_wizard_closes_physchem_plot_when_terminated():
