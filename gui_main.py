@@ -7,34 +7,59 @@ from PyQt6.QtCore import Qt
 import pyqtgraph as pg
 
 
+def _dominant_component_indices_for_summary(composition_profile, Rmax=None):
+    if not composition_profile:
+        return []
+
+    if Rmax is not None:
+        i_rmax = min(
+            range(len(composition_profile)),
+            key=lambda i: abs(composition_profile[i][0] - Rmax)
+        )
+        state = composition_profile[i_rmax][1]
+    else:
+        state = composition_profile[-2][1] if len(composition_profile) > 1 else composition_profile[-1][1]
+
+    active = [idx for idx, value in enumerate(state) if value > 1e-12]
+    if not active:
+        return []
+
+    max_value = max(state[idx] for idx in active)
+    threshold = max_value - 0.05
+    dominant = sorted(idx for idx in active if state[idx] >= threshold)
+    if not dominant:
+        dominant = [max(active, key=lambda idx: state[idx])]
+    return dominant
+
+
 def select_main_components(composition_profile, Rmax):
     """
-    Return the component indices that remain positive in the solid region
-    between Rmax and zero recovery, matching the harness logic.
+    Determine the dominant purified component indices from the final non-pure
+    summary row, so degenerate mixtures do not get assigned a single hard-coded
+    index or a component that belongs on the impurity plot.
     """
     if not composition_profile:
         return [], [], None, None
 
-    # Same i_Rmax logic as test_run.py
     i_Rmax = min(
         range(len(composition_profile)),
         key=lambda i: abs(composition_profile[i][0] - Rmax)
     )
     i_zero = len(composition_profile) - 1
 
-    solid_region = composition_profile[i_Rmax : i_zero + 1]
-
     n_components = len(composition_profile[0][1])
-    main_components = [
-        k for k in range(n_components)
-        if any(row[1][k] > 0 for row in solid_region)
-    ]
+    main_components = _dominant_component_indices_for_summary(composition_profile, Rmax)
+    if not main_components:
+        main_components = [
+            max(range(n_components), key=lambda idx: composition_profile[-2][1][idx])
+            if len(composition_profile) > 1 else 0
+        ]
+
     impurity_components = [
         k for k in range(n_components)
-        if k not in main_components
+        if k not in main_components and any(row[1][k] > 1e-12 for row in composition_profile)
     ]
 
-    # Optional forensic prints
     print("[GUI] i_Rmax", i_Rmax)
     print("[GUI] i_zero", i_zero)
     print("[GUI] main_components", main_components)
@@ -175,25 +200,37 @@ class MainWindow(QMainWindow):
         event.accept()
 
     def _setup_component_selection(self):
+        if not self.composition_profile:
+            self.main_components = []
+            self.impurity_components = []
+            self.purified_component_index = None
+            self.purified_component_indices = []
+            return
+
         i_Rmax = min(
             range(len(self.composition_profile)),
             key=lambda i: abs(self.composition_profile[i][0] - self.Rmax)
         )
         i_zero = len(self.composition_profile) - 1
-        solid_region = self.composition_profile[i_Rmax + 1 : i_zero + 1]
 
         n_components = len(self.composition_profile[0][1])
-        self.main_components = [
-            k for k in range(n_components)
-            if any(row[1][k] > 0 for row in solid_region)
-        ]
+        self.main_components = _dominant_component_indices_for_summary(self.composition_profile, self.Rmax)
+        if not self.main_components:
+            self.main_components = [max(range(n_components), key=lambda idx: self.composition_profile[-2][1][idx]) if len(self.composition_profile) > 1 else 0]
+
+        self.main_components = sorted(self.main_components)
+        self.purified_component_indices = list(self.main_components)
+        self.purified_component_index = self.purified_component_indices[0] if self.purified_component_indices else None
+
         self.impurity_components = [
             k for k in range(n_components)
-            if k not in self.main_components
+            if k not in self.purified_component_indices and any(row[1][k] > 1e-12 for row in self.composition_profile)
         ]
+        self.impurity_components = sorted(self.impurity_components)
 
         print("[GUI] i_Rmax =", i_Rmax)
         print("[GUI] i_zero =", i_zero)
+        print("[GUI] purified_component_indices =", self.purified_component_indices)
         print("[GUI] main_components =", self.main_components)
         print("[GUI] impurity_components =", self.impurity_components)
 
@@ -254,8 +291,25 @@ class MainWindow(QMainWindow):
         self._position_info_panel()
 
     def _populate_plots(self):
-        self.comp1_plot.update_legend(f"Comp1: {self.composition_profile[0][1][0] * 100:.1f}%")
-        self.impurity_plot.update_legend("Impurities: " + ", ".join(f"{v * 100:.1f}%" for v in self.composition_profile[0][1][1:]))
+        if self.main_components:
+            purified_parts = []
+            for idx in self.main_components:
+                value = self.composition_profile[0][1][idx] * 100
+                purified_parts.append(f"Comp{idx + 1}:{value:.1f}%")
+            self.comp1_plot.update_legend(
+                ", ".join(purified_parts) if purified_parts else "Purified: none"
+            )
+        else:
+            self.comp1_plot.update_legend("Purified: none")
+
+        impurity_labels = []
+        for idx in self.impurity_components:
+            value = self.composition_profile[0][1][idx] * 100
+            impurity_labels.append(f"{value:.1f}%")
+
+        self.impurity_plot.update_legend(
+            "Impurities: " + ", ".join(impurity_labels) if impurity_labels else "Impurities: none"
+        )
         self.solvent_plot.update_legend(f"RelSolVol: {self.solvent_profile[0][1]:.2f}")
         self.comp1_plot.set_cursor_position(1.0)
         self.impurity_plot.set_cursor_position(1.0)
@@ -310,28 +364,60 @@ class MainWindow(QMainWindow):
         V_solv = [row[1] for row in self.solvent_profile]
         impurity_colors = self._impurity_colors(len(self.impurity_components))
 
-        for k in self.main_components:
-            comp_pct = [row[1][k] * 100 for row in self.composition_profile]
-            self.comp1_plot.plot_widget.plot(R, comp_pct, pen=pg.mkPen("blue", width=2))
+        degenerate_main_pair = len(self.main_components) > 1
+        rmax_index = None
+        if degenerate_main_pair:
+            rmax_index = min(
+                range(len(self.composition_profile)),
+                key=lambda i: abs(self.composition_profile[i][0] - self.Rmax)
+            )
+
+        def _valid_points(component_index):
+            points = []
+            started = False
+            plateau_value = None
+            if degenerate_main_pair:
+                plateau_value = self.composition_profile[rmax_index][1][component_index] * 100
+
+            for R_val, row in zip(R, [entry[1] for entry in self.composition_profile]):
+                value = row[component_index] * 100
+                if degenerate_main_pair and R_val <= self.Rmax:
+                    value = plateau_value
+
+                if value > 1e-9:
+                    points.append((R_val, value))
+                    started = True
+                    continue
+
+                if started:
+                    points.append((R_val, 0.0))
+                    break
+
+            return points
+
+        for idx, component_index in enumerate(self.main_components):
+            comp_points = _valid_points(component_index)
+            if not comp_points:
+                continue
+
+            color = "blue" if idx == 0 else "darkBlue"
+            self.comp1_plot.plot_widget.plot(
+                [r for r, _ in comp_points],
+                [v for _, v in comp_points],
+                pen=pg.mkPen(color, width=2),
+            )
 
         for idx, k in enumerate(self.impurity_components):
-            imp_pct = [row[1][k] * 100 for row in self.composition_profile]
-            trimmed = []
-            for v in imp_pct:
-                if v <= 0:
-                    break
-                trimmed.append(v)
+            points = _valid_points(k)
+            if not points:
+                continue
 
-            if len(trimmed) < len(imp_pct):
-                trimmed.append(0)
-
-            if trimmed:
-                color = impurity_colors[idx] if idx < len(impurity_colors) else "white"
-                self.impurity_plot.plot_widget.plot(
-                    R[:len(trimmed)],
-                    trimmed,
-                    pen=pg.mkPen(color, width=2),
-                )
+            color = impurity_colors[idx] if idx < len(impurity_colors) else "white"
+            self.impurity_plot.plot_widget.plot(
+                [r for r, _ in points],
+                [v for _, v in points],
+                pen=pg.mkPen(color, width=2),
+            )
 
         self.solvent_plot.plot_widget.plot(R_solv, V_solv, pen=pg.mkPen("cyan", width=2))
 
@@ -339,16 +425,22 @@ class MainWindow(QMainWindow):
         R = 1.0 - value / 100.0
         self.slider_label.setText(f"Recovery: {R*100:.0f}%")
 
-        recovery_index = int(value)
-        comp1 = self.composition_profile[recovery_index][1][0] * 100
-        impurity_values = self.composition_profile[recovery_index][1][1:]
-        impurity_pct = [v * 100 for v in impurity_values]
+        recovery_index = min(len(self.composition_profile) - 1, max(0, int(value)))
+
+        purified_pct = [
+            self.composition_profile[recovery_index][1][idx] * 100
+            for idx in self.main_components
+        ]
+        impurity_pct = [
+            self.composition_profile[recovery_index][1][idx] * 100
+            for idx in self.impurity_components
+        ]
         relsol = self.solvent_profile[recovery_index][1]
 
         text = (
             f"Recovery (%): {R * 100:.2f}\n"
-            f"Purified Component (%): {comp1:.2f}\n"
-            + "Impurities (%): " + ", ".join(f"{v:.2f}" for v in impurity_pct) + "\n"
+            f"Purified Component (%): {', '.join(f'{v:.2f}' for v in purified_pct) if purified_pct else 'none'}\n"
+            + "Impurities (%): " + (", ".join(f"{v:.2f}" for v in impurity_pct) if impurity_pct else "none") + "\n"
             + f"RelSolVol: {relsol:.2f}"
         )
         self.info_panel.update_info(text)

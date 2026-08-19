@@ -47,27 +47,27 @@ def run_test(json_data):
     state = build_canonical_state(mixture, modes, solver="vba")
     segment_grads = compute_segment_gradients(state)
 
-    print("\n==============================================")
-    print(" CANONICAL SEGMENTS")
-    print("==============================================\n")
+    #print("\n==============================================")
+    #print(" CANONICAL SEGMENTS")
+    #print("==============================================\n")
 
-    for seg in state.segments:
-        # Skip degenerate segments
-        if seg.end_R == seg.start_R:
-            continue
+    #for seg in state.segments:
+    #    # Skip degenerate segments
+    #    if seg.end_R == seg.start_R:
+    #        continue
 
-        m_sol = (seg.solvent_end - seg.solvent_start) / (seg.end_R - seg.start_R)
-        b_sol = seg.solvent_start - m_sol * seg.start_R
+    #    m_sol = (seg.solvent_end - seg.solvent_start) / (seg.end_R - seg.start_R)
+    #    b_sol = seg.solvent_start - m_sol * seg.start_R
 
-        xs = ", ".join(f"{v:.6f}" for v in seg.Xliq_start)
-        xe = ", ".join(f"{v:.6f}" for v in seg.Xliq_end)
+    #    xs = ", ".join(f"{v:.6f}" for v in seg.Xliq_start)
+    #    xe = ", ".join(f"{v:.6f}" for v in seg.Xliq_end)
 
-        print(f"SEGMENT {seg.index}")
-        print(f"Rec: {seg.start_R:.6f} → {seg.end_R:.6f}")
-        print(f"Solvent: {seg.solvent_start:.6f} → {seg.solvent_end:.6f}")
-        print(f"m_sol: {m_sol:.12f}")
-        print(f"Xc_start: [{xs}]")
-        print(f"Xc_end:   [{xe}]\n")
+    #    print(f"SEGMENT {seg.index}")
+    #    print(f"Rec: {seg.start_R:.6f} → {seg.end_R:.6f}")
+    #    print(f"Solvent: {seg.solvent_start:.6f} → {seg.solvent_end:.6f}")
+    #    print(f"m_sol: {m_sol:.12f}")
+    #    print(f"Xc_start: [{xs}]")
+    #    print(f"Xc_end:   [{xe}]\n")
 
     print("\n==============================================")
     print(" CANONICAL SLICE COMPOSITIONS")
@@ -83,7 +83,7 @@ def run_test(json_data):
         print(f"  Evaluated R: {result.R:.2f}")
         print(f"  Solvent: {result.solvent:.2f}")
         print(f"  Composition: [{xs}]")
-        print(f"  Ks: {result.Ks:.6f}, kl: {result.kl:.6f}\n")
+        #print(f"  Ks: {result.Ks:.6f}, kl: {result.kl:.6f}\n")
 
 
 
