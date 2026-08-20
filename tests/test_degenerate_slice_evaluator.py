@@ -3,8 +3,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from multx_slicing_engine import multi_mixture_harness
 from multx_slicing_engine.canonical_eutectic import _normalize_summary_rows
 from multx_slicing_engine.canonical_gradients import compute_segment_gradients
+from multx_slicing_engine.canonical_solvent import compute_relsolvol_from_cascade
 from multx_slicing_engine.canonical_types import EutecticPathState, Node, Segment
 from multx_slicing_engine.evaluate_recovery import evaluate_at_recovery
 from multx_slicing_engine.multi_mixture_harness import run_multi_mixture_harness_from_json
@@ -73,3 +75,35 @@ def test_json_route_prints_slice_section(capsys):
     captured = capsys.readouterr().out
     assert "SLICES FOR MIXTURE" in captured
     assert "SLICES FOR ALL MIXTURES" in captured
+
+
+def test_degenerate_multi_removal_uses_sum_of_removed_fractions():
+    result = compute_relsolvol_from_cascade(
+        [1.0, 0.8, 0.0],
+        [[0.0, 0.0, 0.2]],
+        [0.5, 0.3, 0.2],
+    )
+
+    assert result == pytest.approx([0.05])
+
+
+def test_harness_runs_all_mixtures_by_default(monkeypatch):
+    calls = []
+
+    def fake_run_single_mixture(mix_dict):
+        calls.append(mix_dict)
+        return {
+            "mixture": SimpleNamespace(mixture_id=mix_dict.get("mixture_id", "N/A"), raw={}),
+            "state": SimpleNamespace(segments=[], Rmax=1.0, solvent_at_Rmax=0.0),
+            "segment_grads": [],
+            "Rmax": 1.0,
+            "RelSolVol_Rmax": 0.0,
+        }
+
+    monkeypatch.setattr(multi_mixture_harness, "run_single_mixture", fake_run_single_mixture)
+
+    matrix = [{"mixture_id": f"m{i}"} for i in range(6)]
+    results = multi_mixture_harness._run_multi_mixture_harness(matrix)
+
+    assert len(results) == 6
+    assert len(calls) == 6

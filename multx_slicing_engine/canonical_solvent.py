@@ -75,20 +75,22 @@ def compute_relsolvol_from_cascade(
             RelSol.append(M2L[i] / Rmax)
             continue
 
-        # Otherwise, determine which component was removed
         prev = compositions[i - 1]
         curr = compositions[i]
 
         removed_fraction = None
+        removed_components = []
 
-        # Primary rule: component goes from >0 to 0
+        # Detect a degenerate multi-removal event: multiple components that were
+        # present in the previous state are now zero in the current state.
         for p, c in zip(prev, curr):
             if p > 0.0 and c == 0.0:
-                removed_fraction = p
-                break
+                removed_components.append(p)
 
-        # Fallback: largest drop in composition
-        if removed_fraction is None:
+        if removed_components:
+            removed_fraction = sum(removed_components)
+        else:
+            # Fallback: largest drop in composition
             diffs = [p - c for p, c in zip(prev, curr)]
             max_drop = max(diffs)
             if max_drop > 0.0:

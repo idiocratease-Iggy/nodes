@@ -144,12 +144,14 @@ def _build_relsolvol(summary_matrix: List[List[float]]) -> List[float]:
         curr = compositions[i]
 
         removed_fraction = None
+        removed_components = []
         for p, c in zip(prev, curr):
             if p > 0 and c == 0:
-                removed_fraction = p
-                break
+                removed_components.append(p)
 
-        if removed_fraction is None:
+        if removed_components:
+            removed_fraction = sum(removed_components)
+        else:
             diffs = [p - c for p, c in zip(prev, curr)]
             max_drop = max(diffs)
             if max_drop > 0:

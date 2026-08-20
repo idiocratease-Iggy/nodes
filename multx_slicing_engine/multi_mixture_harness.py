@@ -125,7 +125,7 @@ def _extract_max_solvent_volumes(mix_dict):
         return None
 
 
-def _run_multi_mixture_harness(matrix, max_mixtures=5):
+def _run_multi_mixture_harness(matrix, max_mixtures=None):
     """Shared canonical run loop used by JSON/GUI entry points."""
     if not isinstance(matrix, list):
         raise ValueError("Matrix JSON must be a list of mixture dictionaries.")
@@ -133,8 +133,22 @@ def _run_multi_mixture_harness(matrix, max_mixtures=5):
     if not matrix:
         return []
 
+    if max_mixtures is None:
+        limit = len(matrix)
+    else:
+        try:
+            limit = int(max_mixtures)
+        except (TypeError, ValueError):
+            limit = len(matrix)
+        if limit <= 0:
+            limit = len(matrix)
+
     num_mix = _extract_num_unique_mixtures(matrix)
-    limit = min(len(matrix), max_mixtures, num_mix) if num_mix > 0 else min(len(matrix), max_mixtures)
+    if num_mix > 0:
+        limit = min(limit, len(matrix), num_mix)
+    else:
+        limit = min(limit, len(matrix))
+
     results = []
 
     for idx, mix_dict in enumerate(matrix[:limit]):
@@ -178,7 +192,7 @@ def _append_slice_results(canonical_results):
     return canonical_results
 
 
-def run_multi_mixture_harness_from_json(json_path, max_mixtures=5):
+def run_multi_mixture_harness_from_json(json_path, max_mixtures=None):
     """Load a matrix JSON file and run the canonical harness for the configured subset."""
     print("DEBUG: Harness JSON mode called, path =", json_path)
     resolved_path = resolve_matrix_path(json_path)
@@ -196,7 +210,7 @@ def run_multi_mixture_harness_from_json(json_path, max_mixtures=5):
     return results
 
 
-def run_multi_mixture_harness_from_gui(matrix_dict_list, max_mixtures=5):
+def run_multi_mixture_harness_from_gui(matrix_dict_list, max_mixtures=None):
     """Run the canonical harness from the already-built GUI matrix list."""
     print("DEBUG: Harness GUI mode called, mixtures =", len(matrix_dict_list) if isinstance(matrix_dict_list, list) else 0)
     print("\n==============================================")
@@ -210,8 +224,8 @@ def run_multi_mixture_harness_from_gui(matrix_dict_list, max_mixtures=5):
     return canonical_results
 
 
-def run_multi_mixture_harness(matrix_json_path, max_mixtures=5):
-    """Reads matrix JSON and runs canonical pipeline for up to max_mixtures mixtures."""
+def run_multi_mixture_harness(matrix_json_path, max_mixtures=None):
+    """Reads matrix JSON and runs canonical pipeline for the requested number of mixtures."""
     return run_multi_mixture_harness_from_json(matrix_json_path, max_mixtures=max_mixtures)
 
 from multx_slicing_engine.slice_generator import (
@@ -222,7 +236,7 @@ from multx_slicing_engine.slice_generator import (
 
 if __name__ == "__main__":
     matrix_json_path = os.path.join(DATA_DIR, "physchem_matrix.json")
-    canonical_results = run_multi_mixture_harness(matrix_json_path, max_mixtures=5)
+    canonical_results = run_multi_mixture_harness(matrix_json_path, max_mixtures=None)
 
     # Generate slices using the JSON-defined slice count when present.
     all_slices = generate_slices_all_mixtures(canonical_results)
