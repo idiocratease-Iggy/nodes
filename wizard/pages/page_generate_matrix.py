@@ -198,14 +198,14 @@ class PageGenerateMatrix(QWizardPage):
         format_group.setLayout(format_layout)
         left_layout.addWidget(format_group)
 
-        self.generate_matrix_radio = QRadioButton("Generate matrix in memory")
-        self.generate_matrix_radio.setChecked(True)
-        self.generate_matrix_radio.clicked.connect(self.update_next_button_text)
-        if getattr(self.model, "loaded_json_path", None):
-            self.generate_matrix_radio.setChecked(False)
-        mode_layout = QHBoxLayout()
-        mode_layout.addWidget(self.generate_matrix_radio)
-        left_layout.addLayout(mode_layout)
+        #self.generate_matrix_radio = QRadioButton("Generate matrix in memory")
+        #self.generate_matrix_radio.setChecked(True)
+        #self.generate_matrix_radio.clicked.connect(self.update_next_button_text)
+        #if getattr(self.model, "loaded_json_path", None):
+        #    self.generate_matrix_radio.setChecked(False)
+        #mode_layout = QHBoxLayout()
+        #mode_layout.addWidget(self.generate_matrix_radio)
+        #left_layout.addLayout(mode_layout)
 
         # -----------------------------------------------------
         # Lower options: matrix behavior, replicates, and analytical error
@@ -397,9 +397,9 @@ class PageGenerateMatrix(QWizardPage):
         self.model.randomize_design = self.chk_randomize.isChecked()
         self.model.fill_to_full_plates = self.checkbox_fill_full.isChecked()
 
-        print("DEBUG: NEXT pressed")
-        print("DEBUG: physchem_matrix =", self.model.physchem_matrix)
-        print("DEBUG: loaded_json_path =", getattr(self.model, "loaded_json_path", None))
+        #print("DEBUG: NEXT pressed")
+        #print("DEBUG: physchem_matrix =", self.model.physchem_matrix)
+        #print("DEBUG: loaded_json_path =", getattr(self.model, "loaded_json_path", None))
 
         json_path = getattr(self.model, "loaded_json_path", None)
         matrix = getattr(self.model, "physchem_matrix", None)

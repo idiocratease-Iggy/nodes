@@ -20,6 +20,8 @@ Docs_tmp/
 *.tmp
 # Logs
 *.log
+legacy/
+back_end/
 
 # Matplotlib cache
 *.matplotlib/
