@@ -30,6 +30,7 @@ from PyQt6.QtGui import QPainter, QPen, QFont
 import json
 import os
 import string
+from datetime import datetime
 from pathlib import Path
 
 from models.multxeu_model import MultXeuModel
@@ -200,15 +201,6 @@ class PageGenerateMatrix(QWizardPage):
         format_group.setLayout(format_layout)
         left_layout.addWidget(format_group)
 
-        #self.generate_matrix_radio = QRadioButton("Generate matrix in memory")
-        #self.generate_matrix_radio.setChecked(True)
-        #self.generate_matrix_radio.clicked.connect(self.update_next_button_text)
-        #if getattr(self.model, "loaded_json_path", None):
-        #    self.generate_matrix_radio.setChecked(False)
-        #mode_layout = QHBoxLayout()
-        #mode_layout.addWidget(self.generate_matrix_radio)
-        #left_layout.addLayout(mode_layout)
-
         # -----------------------------------------------------
         # Lower options: matrix behavior, replicates, and analytical error
         # -----------------------------------------------------
@@ -282,8 +274,9 @@ class PageGenerateMatrix(QWizardPage):
         self.btn_write.clicked.connect(self.write_excel_files)
 
         # Default plate
-        self.rb_6x4.setChecked(True)
-        self.update_preview(4, 6)
+        self.rb_free.setChecked(True)
+        self.enable_free_format()
+        self.update_preview(1, 1)
 
     def update_next_button_text(self):
         if self.isFinalPage():
@@ -375,6 +368,39 @@ class PageGenerateMatrix(QWizardPage):
         return mixtures
 
 
+    def _build_export_rows(self, layer):
+        anchors_by_mixture = {
+            anchor.get("mixture_id"): anchor
+            for anchor in layer.get("mixture_anchors", [])
+            if anchor.get("mixture_id")
+        }
+
+        export_rows = []
+        for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
+            slice_count = int(scenario_name.split("_")[-1]) if scenario_name else 0
+            for row in rows:
+                anchor = anchors_by_mixture.get(row.get("mixture_id"), {})
+                x_c = row.get("Xc", []) or anchor.get("Xc", [])
+                x_s = row.get("Xs", []) or []
+                x_l = row.get("Xliq", []) or []
+                row_data = {
+                    "Mixture_id": row.get("mixture_id"),
+                    "Rmax": anchor.get("Rmax"),
+                    "RelSolVol(Rmax)": anchor.get("RelSolVol_Rmax"),
+                }
+                for idx, value in enumerate(x_c, start=1):
+                    row_data[f"Xc_{idx}"] = value
+                for idx, value in enumerate(x_s, start=1):
+                    row_data[f"Xs_{idx}"] = value
+                for idx, value in enumerate(x_l, start=1):
+                    row_data[f"Xliq_{idx}"] = value
+                row_data["R"] = row.get("R")
+                row_data["RelSolVol"] = row.get("RelSolVol")
+                row_data["slice_count"] = slice_count
+                row_data["slice_index"] = row.get("slice_index")
+                export_rows.append(row_data)
+        return export_rows
+
     def write_matrix_layer_exports(self, layer=None, output_dir=None):
         if layer is None:
             layer = build_matrix_layer(getattr(self.model, "canonical_results", []))
@@ -383,42 +409,42 @@ class PageGenerateMatrix(QWizardPage):
         output_dir.mkdir(parents=True, exist_ok=True)
 
         written_files = []
-        anchors_by_mixture = {
-            anchor.get("mixture_id"): anchor
-            for anchor in layer.get("mixture_anchors", [])
-            if anchor.get("mixture_id")
-        }
+        export_rows = self._build_export_rows(layer)
+        for slice_count in sorted({int(row.get("slice_count", 0)) for row in export_rows if row.get("slice_count") is not None}):
+            rows_for_slice = [row for row in export_rows if row.get("slice_count") == slice_count]
+            if not rows_for_slice:
+                continue
 
-        for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
-            slice_records = []
-            for row in rows:
-                anchor = anchors_by_mixture.get(row.get("mixture_id"), {})
-                slice_records.append({
-                    "scenario": scenario_name,
-                    "mixture_id": row.get("mixture_id"),
-                    "slice_count": row.get("slice_count"),
-                    "slice_index": row.get("slice_index"),
-                    "Xc": row.get("Xc", []),
-                    "Xs": row.get("Xs", []),
-                    "Xl": row.get("Xliq", []),
-                    "R": row.get("R"),
-                    "R_check": row.get("R_check", []),
-                    "RelSolVol": row.get("RelSolVol"),
-                    "Rmax": anchor.get("Rmax"),
-                    "RmaxNormSolVol": anchor.get("RelSolVol_Rmax"),
-                    "mass_balance_ok": row.get("mass_balance_ok"),
-                    "correction_applied": row.get("correction_applied"),
-                    "correction_delta_R": row.get("correction_delta_R"),
-                    "correction_flagged": row.get("correction_flagged"),
-                })
+            headers = ["Mixture_id"]
+            component_count = max(len(row.get("Xc_1", [])) if False else 0, 0)
+            for anchor in layer.get("mixture_anchors", []):
+                component_count = max(component_count, len(anchor.get("Xc", []) or []))
+            for idx in range(1, component_count + 1):
+                headers.append(f"Xc_{idx}")
+            for idx in range(1, component_count + 1):
+                headers.append(f"Xs_{idx}")
+            for idx in range(1, component_count + 1):
+                headers.append(f"Xliq_{idx}")
+            headers.extend(["R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"])
 
-            sheet_rows = {
-                "mixture_anchors": list(layer.get("mixture_anchors", [])),
-                "segments": list(layer.get("segments", [])),
-                "slice_records": slice_records,
-            }
-            output_path = output_dir / f"matrix_layer_{scenario_name}.xlsx"
-            write_excel(output_path, sheet_rows)
+            workbook_rows = []
+            for row in rows_for_slice:
+                workbook_row = {header: None for header in headers}
+                for header in headers:
+                    if header.startswith("Xc_"):
+                        workbook_row[header] = row.get(header)
+                    elif header.startswith("Xs_"):
+                        workbook_row[header] = row.get(header)
+                    elif header.startswith("Xliq_"):
+                        workbook_row[header] = row.get(header)
+                    elif header in {"Mixture_id", "R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"}:
+                        workbook_row[header] = row.get(header)
+                workbook_rows.append(workbook_row)
+
+            timestamp = datetime.now().strftime("%y%m%d_%H%M")
+            output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}.xlsx"
+            export_rows_for_sheet = [{header: row.get(header) for header in headers} for row in workbook_rows]
+            write_excel(output_path, {"slice_records": export_rows_for_sheet})
             written_files.append(str(output_path))
 
         if written_files:

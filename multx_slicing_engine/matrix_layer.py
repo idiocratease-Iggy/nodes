@@ -234,19 +234,20 @@ def build_matrix_layer(canonical_results: List[Dict[str, Any]]) -> Dict[str, Any
 
             for slice_index, slice_result in enumerate(scenario_slices, start=1):
                 Xs = _safe_list(getattr(slice_result, "Xsol", []))
-                R = float(getattr(slice_result, "R", 0.0))
+                original_R = float(getattr(slice_result, "R", 0.0))
                 relsolvol = float(getattr(slice_result, "solvent", 0.0))
-                derived_xliq = _compute_liquor_from_slice(Xc, Xs, R)
-                original_R = R
+                derived_xliq = _compute_liquor_from_slice(Xc, Xs, original_R)
                 adjusted_R, adjusted_xliq, correction_applied, correction_flagged = _adjust_slice_for_negative_liquor(
                     Xc,
                     Xs,
-                    R,
+                    original_R,
                     tolerance=0.005,
                 )
                 if correction_applied:
                     derived_xliq = adjusted_xliq
                     R = adjusted_R
+                else:
+                    R = original_R
                 derived_xliq = _clip_tiny_negative_values(derived_xliq)
                 r_check = _compute_r_check(Xc, Xs, derived_xliq)
 

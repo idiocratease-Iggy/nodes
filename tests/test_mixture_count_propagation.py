@@ -1,7 +1,11 @@
 import json
+import re
 from pathlib import Path
 
+from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication
+
+from multx_slicing_engine.excel_writer import write_excel
 
 from input_writer import build_configuration_json, Params, write_json
 from mixture_generator import generate_mixture_set
@@ -69,7 +73,7 @@ def test_generate_matrix_populates_model_with_selected_count(tmp_path):
     assert model.physchem_matrix == mixtures
 
 
-def test_export_writes_one_workbook_per_slice_scenario(tmp_path):
+def test_export_writes_single_sheet_workbooks_with_slice_count_names(tmp_path):
     app = QApplication.instance() or QApplication([])
     model = MultXeuModel()
     page = PageGenerateMatrix(model)
@@ -131,11 +135,94 @@ def test_export_writes_one_workbook_per_slice_scenario(tmp_path):
     written_files = page.write_matrix_layer_exports(layer=layer, output_dir=tmp_path)
 
     assert len(written_files) == 2
-    assert {Path(path).name for path in written_files} == {
-        "matrix_layer_slice_count_1.xlsx",
-        "matrix_layer_slice_count_2.xlsx",
-    }
     assert all(Path(path).exists() for path in written_files)
+    for path in written_files:
+        assert re.search(r"_Vol\d{2}\.xlsx$", Path(path).name)
+        wb = load_workbook(path)
+        assert len(wb.worksheets) == 1
+        ws = wb.active
+        assert ws.title == "slice_records"
+        headers = [cell.value for cell in ws[2]]
+        assert headers[0] == "Mixture_id"
+        assert headers[1] == "Component 1"
+        assert headers[-2] == "Rmax"
+        assert headers[-1] == "Rel. Sol. Volume @ Rmax"
+
+
+def test_excel_writer_adds_styled_two_row_headers(tmp_path):
+    output_path = tmp_path / "styled.xlsx"
+    write_excel(output_path, {
+        "slice_records": [
+            {
+                "Mixture_id": "mix_1",
+                "Xc_1": 0.8,
+                "Xc_2": 0.2,
+                "Xs_1": 0.7,
+                "Xs_2": 0.3,
+                "Xliq_1": 0.5,
+                "Xliq_2": 0.5,
+                "R": 0.75,
+                "RelSolVol": 1.25,
+                "Rmax": 0.6,
+                "RelSolVol(Rmax)": 2.5,
+            }
+        ]
+    })
+
+    wb = load_workbook(output_path)
+    ws = wb.active
+
+    assert ws.cell(1, 2).value == "Starting Composition"
+    assert ws.cell(1, 4).value == "Solid Composition"
+    assert ws.cell(1, 6).value == "Liquor Composition"
+    assert ws.cell(2, 2).value == "Component 1"
+    assert ws.cell(2, 3).value == "Component 2"
+    assert ws.cell(2, 8).value == "Recovery"
+    assert ws.cell(2, 9).value == "Rel. Sol. Volume"
+    assert ws.cell(2, 10).value == "Rmax"
+    assert ws.cell(2, 11).value == "Rel. Sol. Volume @ Rmax"
+
+    assert ws.cell(3, 2).number_format == "0.00000%"
+    assert ws.cell(3, 8).number_format == "0.00%"
+    assert ws.cell(3, 9).number_format == "0.000"
+    assert ws.cell(3, 10).number_format == "0.00%"
+
+    assert any(str(rng) == "B1:C1" for rng in ws.merged_cells.ranges)
+    assert ws.freeze_panes == "A3"
+
+
+def test_excel_writer_merges_header_groups_by_component_count(tmp_path):
+    output_path = tmp_path / "four_component.xlsx"
+    write_excel(output_path, {
+        "slice_records": [
+            {
+                "Mixture_id": "mix_1",
+                "Xc_1": 0.8,
+                "Xc_2": 0.1,
+                "Xc_3": 0.05,
+                "Xc_4": 0.05,
+                "Xs_1": 0.7,
+                "Xs_2": 0.1,
+                "Xs_3": 0.1,
+                "Xs_4": 0.1,
+                "Xliq_1": 0.5,
+                "Xliq_2": 0.2,
+                "Xliq_3": 0.2,
+                "Xliq_4": 0.1,
+                "R": 0.75,
+                "RelSolVol": 1.25,
+                "Rmax": 0.6,
+                "RelSolVol(Rmax)": 2.5,
+            }
+        ]
+    })
+
+    wb = load_workbook(output_path)
+    ws = wb.active
+
+    assert any(str(rng) == "B1:E1" for rng in ws.merged_cells.ranges)
+    assert any(str(rng) == "F1:I1" for rng in ws.merged_cells.ranges)
+    assert any(str(rng) == "J1:M1" for rng in ws.merged_cells.ranges)
 
 
 def test_slice_count_comes_from_mixture_slicing_config():
