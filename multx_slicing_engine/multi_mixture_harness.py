@@ -15,10 +15,12 @@ try:
     from multx_slicing_engine.mixture_loader import mixture_from_json
     from multx_slicing_engine.canonical_eutectic import build_canonical_state
     from multx_slicing_engine.canonical_gradients import compute_segment_gradients
+    from multx_slicing_engine.matrix_layer import build_matrix_layer, print_matrix_layer
 except ImportError:
     from mixture_loader import mixture_from_json
     from canonical_eutectic import build_canonical_state
     from canonical_gradients import compute_segment_gradients
+    from matrix_layer import build_matrix_layer, print_matrix_layer
 
 
 def resolve_matrix_path(matrix_json_path):
@@ -192,6 +194,13 @@ def _append_slice_results(canonical_results):
     return canonical_results
 
 
+def _emit_matrix_layer_summary(canonical_results):
+    """Build and print the matrix-layer view after the base-block results are ready."""
+    layer = build_matrix_layer(canonical_results)
+    print_matrix_layer(layer)
+    return layer
+
+
 def run_multi_mixture_harness_from_json(json_path, max_mixtures=None):
     """Load a matrix JSON file and run the canonical harness for the configured subset."""
     print("DEBUG: Harness JSON mode called, path =", json_path)
@@ -206,6 +215,7 @@ def run_multi_mixture_harness_from_json(json_path, max_mixtures=None):
 
     results = _run_multi_mixture_harness(matrix, max_mixtures=max_mixtures)
     _append_slice_results(results)
+    _emit_matrix_layer_summary(results)
     print("DEBUG: Harness JSON mode returning", len(results) if isinstance(results, list) else results)
     return results
 
@@ -221,6 +231,7 @@ def run_multi_mixture_harness_from_gui(matrix_dict_list, max_mixtures=None):
     canonical_results = _run_multi_mixture_harness(matrix_dict_list, max_mixtures=max_mixtures)
     print("DEBUG: Harness GUI mode returning", len(canonical_results) if isinstance(canonical_results, list) else canonical_results)
     _append_slice_results(canonical_results)
+    _emit_matrix_layer_summary(canonical_results)
     return canonical_results
 
 

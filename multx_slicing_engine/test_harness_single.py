@@ -79,7 +79,7 @@ def run_test(json_data):
         result = evaluate_recovery(state, segment_grads, R)
 
         xs = ", ".join(f"{v * 100:.2f}%" for v in result.Xliq)
-        print(f"Slice at R={R:.2f}")
+        print(f"Slice at2 R={R:.2f}")
         print(f"  Evaluated R: {result.R:.2f}")
         print(f"  Solvent: {result.solvent:.2f}")
         print(f"  Composition: [{xs}]")

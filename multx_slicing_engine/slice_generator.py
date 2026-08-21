@@ -65,8 +65,8 @@ def print_slices_to_terminal(mixture_id, slice_results):
     for s in slice_results:
         xs = ", ".join(f"{v*100:.2f}%" for v in s.Xliq)
         print(f"Slice at R={s.R:.4f}")
-        print(f"  Solvent: {s.solvent:.4f}")
-        print(f"  Composition: [{xs}]")
+        print(f"  Solvent(RelSolVol@slice): {s.solvent:.4f}")
+        print(f"  Composition(@slice): [{xs}]")
         print("")
 
 
