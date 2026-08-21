@@ -72,98 +72,48 @@ def _compute_liquor_from_slice(Xc: List[float], Xs: List[float], R: float) -> Li
 
 
 def _clip_tiny_negative_values(values: List[float], threshold: float = 1e-12) -> List[float]:
-    return [0.0 if abs(value) <= threshold and value < 0.0 else value for value in values]
+    return [0.0 if value < 0.0 else value for value in values]
 
 
-def _adjust_slice_for_negative_liquor(
-    Xc: List[float],
-    Xs: List[float],
-    R: float,
-    tolerance: float = 0.005,
-    min_value: float = 0.0,
-    eps: float = 1e-12,
-) -> tuple[float, List[float], bool, bool]:
-    """Adjust R minimally so any negative liquor compositions become non-negative.
+def _compute_implied_recovery_for_zero_liquor(Xc: List[float], Xs: List[float], R: float) -> float:
+    if abs(R - 1.0) < 1e-12:
+        return R
 
-    The base relation is Xl = (R*Xs - Xc)/(R - 1). When one or more components
-    become negative, this routine uses a small bracketed bisection search to find
-    a nearby R that makes the minimum liquor composition cross zero. This is a
-    stable 1-D root solve and avoids relying on a heavier optimizer dependency.
+    xliq = _compute_liquor_from_slice(Xc, Xs, R)
+    implied_R = None
+    for xc, xs, liquor_value in zip(Xc, Xs, xliq):
+        if liquor_value >= 0.0:
+            continue
+        if abs(xs) < 1e-12:
+            continue
+        candidate_R = xc / xs
+        if implied_R is None or abs(candidate_R - R) < abs(implied_R - R):
+            implied_R = candidate_R
+
+    return implied_R if implied_R is not None else R
+
+
+def _diagnose_slice_liquor(Xc: List[float], Xs: List[float], R: float) -> tuple[float, List[float], int, bool]:
+    """Compute the raw liquor values, count negative entries, and report a local adjusted recovery.
+
+    This keeps the original slice R untouched and focuses the diagnostic on the raw
+    liquor calculation, the number of negative components, and the implied recovery
+    that would arise if the negative liquor component were clamped to zero.
     """
 
     if abs(R - 1.0) < 1e-12:
-        return R, [0.0 for _ in Xc], False, False
+        return R, [0.0 for _ in Xc], 0, False
 
     xliq = _compute_liquor_from_slice(Xc, Xs, R)
-    if all(value >= min_value - eps for value in xliq):
-        return R, xliq, False, False
+    negative_count = sum(1 for value in xliq if value < 0.0)
+    clamped_xliq = _clip_tiny_negative_values(xliq)
+    correction_flagged = negative_count > 0
 
-    def _f(candidate_R: float) -> float:
-        candidate_xliq = _compute_liquor_from_slice(Xc, Xs, candidate_R)
-        return min(value for value in candidate_xliq) - min_value
+    if not correction_flagged:
+        return R, clamped_xliq, negative_count, False
 
-    def _bisect_root(lower: float, upper: float) -> float:
-        lower_value = _f(lower)
-        upper_value = _f(upper)
-        if lower_value == 0.0:
-            return lower
-        if upper_value == 0.0:
-            return upper
-
-        for _ in range(80):
-            midpoint = 0.5 * (lower + upper)
-            midpoint_value = _f(midpoint)
-            if abs(midpoint_value) <= eps:
-                return midpoint
-            if lower_value * midpoint_value <= 0.0:
-                upper = midpoint
-                upper_value = midpoint_value
-            else:
-                lower = midpoint
-                lower_value = midpoint_value
-        return 0.5 * (lower + upper)
-
-    candidates: List[tuple[float, float]] = []
-    if R < 1.0:
-        left = max(1e-8, 0.0)
-        right = max(1e-8, min(R, 1.0 - 1e-8))
-        if left < right:
-            left_value = _f(left)
-            right_value = _f(right)
-            if left_value * right_value <= 0.0:
-                candidates.append((left, right))
-        right = max(1e-8, min(1.0 - 1e-8, 1.0 - 1e-6))
-        if right > R:
-            right_value = _f(right)
-            if _f(R) * right_value <= 0.0:
-                candidates.append((R, right))
-    else:
-        left = max(1e-8, R)
-        right = max(left + 1e-6, 1.0 + 1e-6)
-        if left < right:
-            left_value = _f(left)
-            right_value = _f(right)
-            if left_value * right_value <= 0.0:
-                candidates.append((left, right))
-
-    if not candidates:
-        return R, xliq, False, False
-
-    best_R = R
-    best_xliq = xliq
-    best_delta = float("inf")
-    for lower, upper in candidates:
-        adjusted_R = _bisect_root(lower, upper)
-        adjusted_xliq = _compute_liquor_from_slice(Xc, Xs, adjusted_R)
-        delta = abs(adjusted_R - R)
-        if delta < best_delta:
-            best_R = adjusted_R
-            best_xliq = adjusted_xliq
-            best_delta = delta
-
-    correction_applied = abs(best_R - R) > eps
-    correction_flagged = correction_applied and abs(best_R - R) > tolerance * max(abs(R), 1.0)
-    return best_R, best_xliq, correction_applied, correction_flagged
+    adjusted_R = _compute_implied_recovery_for_zero_liquor(Xc, Xs, R)
+    return adjusted_R, clamped_xliq, negative_count, True
 
 
 def _compute_r_check(Xc: List[float], Xs: List[float], Xl: List[float]) -> List[float]:
@@ -233,22 +183,17 @@ def build_matrix_layer(canonical_results: List[Dict[str, Any]]) -> Dict[str, Any
                 scenario_slices = generate_slices_for_mixture(summary, scenario_count)
 
             for slice_index, slice_result in enumerate(scenario_slices, start=1):
-                Xs = _safe_list(getattr(slice_result, "Xsol", []))
+                Xs = _safe_list(getattr(slice_result, "Xliq", []))
                 original_R = float(getattr(slice_result, "R", 0.0))
                 relsolvol = float(getattr(slice_result, "solvent", 0.0))
                 derived_xliq = _compute_liquor_from_slice(Xc, Xs, original_R)
-                adjusted_R, adjusted_xliq, correction_applied, correction_flagged = _adjust_slice_for_negative_liquor(
+                adjusted_R, adjusted_xliq, negative_liquor_count, correction_flagged = _diagnose_slice_liquor(
                     Xc,
                     Xs,
                     original_R,
-                    tolerance=0.005,
                 )
-                if correction_applied:
-                    derived_xliq = adjusted_xliq
-                    R = adjusted_R
-                else:
-                    R = original_R
-                derived_xliq = _clip_tiny_negative_values(derived_xliq)
+                derived_xliq = _clip_tiny_negative_values(adjusted_xliq)
+                R = original_R
                 r_check = _compute_r_check(Xc, Xs, derived_xliq)
 
                 row = {
@@ -262,8 +207,10 @@ def build_matrix_layer(canonical_results: List[Dict[str, Any]]) -> Dict[str, Any
                     "Xliq": derived_xliq,
                     "R_check": r_check,
                     "mass_balance_ok": not correction_flagged,
-                    "correction_applied": correction_applied,
-                    "correction_delta_R": abs(original_R - adjusted_R) if correction_applied else 0.0,
+                    "correction_applied": correction_flagged,
+                    "adjusted_R": adjusted_R,
+                    "negative_liquor_count": negative_liquor_count,
+                    "correction_delta_R": abs(original_R - adjusted_R) if correction_flagged else 0.0,
                     "correction_flagged": correction_flagged,
                 }
 
