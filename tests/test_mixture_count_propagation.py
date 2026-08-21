@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
@@ -66,6 +67,75 @@ def test_generate_matrix_populates_model_with_selected_count(tmp_path):
     assert len(mixtures) == 5
     assert len(model.physchem_matrix) == 5
     assert model.physchem_matrix == mixtures
+
+
+def test_export_writes_one_workbook_per_slice_scenario(tmp_path):
+    app = QApplication.instance() or QApplication([])
+    model = MultXeuModel()
+    page = PageGenerateMatrix(model)
+
+    layer = {
+        "mixture_anchors": [{
+            "mixture_id": "mix_1",
+            "component_count": 2,
+            "Xc": [0.6, 0.4],
+            "Rmax": 0.5,
+            "RelSolVol_Rmax": 1.0,
+            "slice_count": 2,
+            "segment_count": 1,
+        }],
+        "segments": [{
+            "mixture_id": "mix_1",
+            "segment_index": 0,
+            "start_R": 1.0,
+            "end_R": 0.5,
+            "solvent_start": 0.0,
+            "solvent_end": 1.0,
+            "Xliq_start": [0.6, 0.4],
+            "Xliq_end": [0.5, 0.5],
+        }],
+        "slice_arrays": {
+            "slice_count_1": [{
+                "mixture_id": "mix_1",
+                "slice_count": 1,
+                "slice_index": 1,
+                "R": 0.75,
+                "RelSolVol": 0.5,
+                "Xc": [0.6, 0.4],
+                "Xs": [0.7, 0.3],
+                "Xliq": [0.5, 0.5],
+                "R_check": [0.75, 0.75],
+                "mass_balance_ok": True,
+                "correction_applied": False,
+                "correction_delta_R": 0.0,
+                "correction_flagged": False,
+            }],
+            "slice_count_2": [{
+                "mixture_id": "mix_1",
+                "slice_count": 2,
+                "slice_index": 1,
+                "R": 0.6,
+                "RelSolVol": 1.0,
+                "Xc": [0.6, 0.4],
+                "Xs": [0.65, 0.35],
+                "Xliq": [0.5, 0.5],
+                "R_check": [0.6, 0.6],
+                "mass_balance_ok": True,
+                "correction_applied": False,
+                "correction_delta_R": 0.0,
+                "correction_flagged": False,
+            }],
+        },
+    }
+
+    written_files = page.write_matrix_layer_exports(layer=layer, output_dir=tmp_path)
+
+    assert len(written_files) == 2
+    assert {Path(path).name for path in written_files} == {
+        "matrix_layer_slice_count_1.xlsx",
+        "matrix_layer_slice_count_2.xlsx",
+    }
+    assert all(Path(path).exists() for path in written_files)
 
 
 def test_slice_count_comes_from_mixture_slicing_config():

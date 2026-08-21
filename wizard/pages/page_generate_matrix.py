@@ -39,6 +39,8 @@ from multx_slicing_engine.multi_mixture_harness import (
     run_multi_mixture_harness_from_json,
     run_multi_mixture_harness_from_gui,
 )
+from multx_slicing_engine.excel_writer import write_excel
+from multx_slicing_engine.matrix_layer import build_matrix_layer
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
@@ -277,7 +279,7 @@ class PageGenerateMatrix(QWizardPage):
         self.spin_rows.valueChanged.connect(self.update_free_preview)
         self.spin_cols.valueChanged.connect(self.update_free_preview)
 
-        self.btn_write.clicked.connect(self.generate_mixtures)
+        self.btn_write.clicked.connect(self.write_excel_files)
 
         # Default plate
         self.rb_6x4.setChecked(True)
@@ -328,7 +330,6 @@ class PageGenerateMatrix(QWizardPage):
     def generate_mixtures(self, config_path=None, config=None):
         self.model.replicate_percent = self.spin_repl.value() if self.chk_repl.isChecked() else 0
         self.model.analytical_error_percent = self.spin_error.value() if self.chk_error.isChecked() else 0
-        self.validatePage()
 
         if config is None:
             if config_path is None:
@@ -373,6 +374,61 @@ class PageGenerateMatrix(QWizardPage):
         print(f"[Matrix] Generated {len(mixtures)} mixtures in memory")
         return mixtures
 
+
+    def write_matrix_layer_exports(self, layer=None, output_dir=None):
+        if layer is None:
+            layer = build_matrix_layer(getattr(self.model, "canonical_results", []))
+
+        output_dir = Path(output_dir) if output_dir is not None else DATA_DIR
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        written_files = []
+        anchors_by_mixture = {
+            anchor.get("mixture_id"): anchor
+            for anchor in layer.get("mixture_anchors", [])
+            if anchor.get("mixture_id")
+        }
+
+        for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
+            slice_records = []
+            for row in rows:
+                anchor = anchors_by_mixture.get(row.get("mixture_id"), {})
+                slice_records.append({
+                    "scenario": scenario_name,
+                    "mixture_id": row.get("mixture_id"),
+                    "slice_count": row.get("slice_count"),
+                    "slice_index": row.get("slice_index"),
+                    "Xc": row.get("Xc", []),
+                    "Xs": row.get("Xs", []),
+                    "Xl": row.get("Xliq", []),
+                    "R": row.get("R"),
+                    "R_check": row.get("R_check", []),
+                    "RelSolVol": row.get("RelSolVol"),
+                    "Rmax": anchor.get("Rmax"),
+                    "RmaxNormSolVol": anchor.get("RelSolVol_Rmax"),
+                    "mass_balance_ok": row.get("mass_balance_ok"),
+                    "correction_applied": row.get("correction_applied"),
+                    "correction_delta_R": row.get("correction_delta_R"),
+                    "correction_flagged": row.get("correction_flagged"),
+                })
+
+            sheet_rows = {
+                "mixture_anchors": list(layer.get("mixture_anchors", [])),
+                "segments": list(layer.get("segments", [])),
+                "slice_records": slice_records,
+            }
+            output_path = output_dir / f"matrix_layer_{scenario_name}.xlsx"
+            write_excel(output_path, sheet_rows)
+            written_files.append(str(output_path))
+
+        if written_files:
+            self.model.last_export_path = written_files[-1]
+        return written_files
+
+    def write_excel_files(self):
+        if not getattr(self.model, "physchem_matrix", None) and not getattr(self.model, "loaded_json_path", None):
+            self.generate_mixtures()
+        self.validatePage()
 
     # ---------------------------------------------------------
     # Save plate metadata into model (unchanged)
@@ -421,5 +477,8 @@ class PageGenerateMatrix(QWizardPage):
                 raise ValueError("No matrix data available. Generate a matrix or load a JSON file first.")
             print("DEBUG: GUI branch -> run_multi_mixture_harness_from_gui, len =", len(matrix))
             self.model.canonical_results = run_multi_mixture_harness_from_gui(matrix)
+
+        layer = build_matrix_layer(self.model.canonical_results)
+        self.write_matrix_layer_exports(layer=layer, output_dir=DATA_DIR)
 
         return True
