@@ -1,0 +1,134 @@
+\section{Liquor Composition Along a Multicomponent Eutectic Cascade}
+
+In a multicomponent eutectic purification cascade, the system evolves through a
+sequence of nodes. At each node $k$, the eutectic solver returns two quantities:
+
+\begin{itemize}
+    \item The eutectic solid composition:
+    
+
+\[
+        X^{(k)}_{\mathrm{eu}} = \{ X^{(k)}_{\mathrm{eu},i} \}_{i=1}^N
+    \]
+
+
+    \item The remaining mixture after subtracting the eutectic:
+    
+
+\[
+        X^{(k)}_{\mathrm{mix}} = \{ X^{(k)}_{\mathrm{mix},i} \}_{i=1}^N
+    \]
+
+
+\end{itemize}
+
+The remaining mixture $X^{(k)}_{\mathrm{mix}}$ is obtained by subtracting the
+eutectic mass from the current mixture and renormalising. This cumulative
+renormalisation implicitly contains the full history of all previous eutectic
+removals. Therefore, $X^{(k)}_{\mathrm{mix}}$ represents the true liquor
+composition at node $k$.
+
+\subsection{Canonical Segments}
+
+The canonical cascade is constructed by pairing successive nodes into segments.
+For segment $s$ spanning nodes $k$ and $k+1$, we define:
+
+
+
+\[
+    X^{(s)}_{\mathrm{liq,start}} = X^{(k)}_{\mathrm{mix}}, \qquad
+    X^{(s)}_{\mathrm{liq,end}}   = X^{(k+1)}_{\mathrm{mix}}.
+\]
+
+
+
+These two compositions are physically valid equilibrium liquors produced by the
+solver. They lie in the simplex, satisfy mass balance, and require no further
+derivation.
+
+The solid composition associated with segment $s$ is the eutectic at the
+\emph{end} node:
+
+
+
+\[
+    X^{(s)}_{\mathrm{sol}} = X^{(k+1)}_{\mathrm{eu}}.
+\]
+
+
+
+This is consistent with the gradient/intercept construction, where the solid
+composition is determined by the eutectic geometry at the segment boundary.
+
+\subsection{Liquor Composition at Arbitrary Recovery}
+
+For any recovery value $R$ lying within segment $s$, the liquor composition is
+obtained by linear interpolation between the segment endpoints:
+
+
+
+\[
+    \lambda = \frac{R - R_{\mathrm{start}}^{(s)}}
+                   {R_{\mathrm{end}}^{(s)} - R_{\mathrm{start}}^{(s)}},
+\]
+
+
+
+
+
+\[
+    X^{(R)}_{\mathrm{liq},i}
+    = (1 - \lambda)\, X^{(s)}_{\mathrm{liq,start},i}
+      + \lambda\, X^{(s)}_{\mathrm{liq,end},i}.
+\]
+
+
+
+Because both endpoint compositions are valid equilibrium liquors, the
+interpolated composition $X^{(R)}_{\mathrm{liq}}$ remains within the feasible
+composition simplex and satisfies:
+
+
+
+\[
+    X^{(R)}_{\mathrm{liq},i} \ge 0, \qquad
+    \sum_{i=1}^N X^{(R)}_{\mathrm{liq},i} = 1.
+\]
+
+
+
+\subsection{Why the Lever Rule is Not Used}
+
+In multicomponent, non-ideal systems, the liquor composition cannot be derived
+from the solid composition via a binary lever rule:
+
+
+
+\[
+    X_{\mathrm{liq},i}
+    = \frac{X_{c,i} - R\,X_{\mathrm{sol},i}}{1 - R}.
+\]
+
+
+
+This expression does not account for the cumulative history of eutectic
+subtractions and fails to represent the true equilibrium liquor in systems with
+more than two components or non-ideal interactions. For this reason, the liquor
+composition is taken directly from the solver outputs $X^{(k)}_{\mathrm{mix}}$
+and interpolated along canonical segments.
+
+\subsection{Summary}
+
+\begin{itemize}
+    \item The solid compositions $X^{(s)}_{\mathrm{sol}}$ come directly from the
+          eutectic solver and correspond to the gradient/intercept geometry at
+          each node.
+    \item The liquor compositions $X^{(s)}_{\mathrm{liq,start}}$ and
+          $X^{(s)}_{\mathrm{liq,end}}$ are the renormalised remaining mixtures
+          after each eutectic removal.
+    \item Slice liquor compositions are obtained by interpolation between these
+          physically valid endpoint liquors.
+\end{itemize}
+
+This construction ensures that all slice compositions are physically meaningful,
+mass-balanced, and consistent with the underlying thermodynamic model.

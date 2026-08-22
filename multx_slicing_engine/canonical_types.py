@@ -21,6 +21,7 @@ class Segment:
     end_R: float
     Xliq_start: List[float]
     Xliq_end: List[float]
+    Xsol: List[float]
     solvent_start: float
     solvent_end: float
     metadata: Dict[str, Any] = None

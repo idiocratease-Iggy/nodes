@@ -78,7 +78,7 @@ class WizardController(QWizard):
         self.page_physchem = PagePhysChem(self.model)
         self.page_generate_matrix = PageGenerateMatrix(self.model)
 
-        print("DEBUG: WizardController same model instance =", self.model is self.page_physchem.model and self.model is self.page_generate_matrix.model)
+        # print("DEBUG: WizardController same model instance =", self.model is self.page_physchem.model and self.model is self.page_generate_matrix.model)
 
         # Add pages in order
         self.addPage(self.page_physchem)

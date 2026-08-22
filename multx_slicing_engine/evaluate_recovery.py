@@ -19,6 +19,10 @@ class SliceResult:
     Ks: float
     kl: float
     solvent: float
+    seg_index: int | None = None
+    seg_start_R: float | None = None
+    seg_end_R: float | None = None
+    seg_Xsol: List[float] | None = None
 
 
 def _segment_for_recovery(segments, R: float):
@@ -65,29 +69,27 @@ def evaluate_at_recovery(state: EutecticPathState,
     sg = segment_grads[seg_index]
 
     # ------------------------------------------------------------
-    # 3. Liquor composition (linear interpolation)
+    # 3. Solid composition is explicit on the segment itself.
+    # ------------------------------------------------------------
+    Xsol = list(seg.Xsol)
+
+    # ------------------------------------------------------------
+    # 4. Liquor composition (segment interpolation)
     # ------------------------------------------------------------
     start_R = seg.start_R
     end_R = seg.end_R
     if abs(start_R - end_R) <= 1e-12:
         Xliq = list(seg.Xliq_start)
     else:
+        frac = (R - start_R) / (end_R - start_R)
         Xliq = []
         for x0, x1 in zip(seg.Xliq_start, seg.Xliq_end):
-            if abs(x0) <= 1e-12:
-                Xliq.append(0.0)
-                continue
-            frac = (R - start_R) / (end_R - start_R)
-            Xliq.append(x0 + (x1 - x0) * frac)
-
-    # ------------------------------------------------------------
-    # 4. Solid composition
-    # ------------------------------------------------------------
-    node_idx = seg_index + 1
-    if node_idx < len(state.nodes):
-        Xsol = state.nodes[node_idx].Xeu
-    else:
-        Xsol = state.nodes[-1].Xeu
+            x = x0 + (x1 - x0) * frac
+            if x < 0.0:
+                x = 0.0
+            elif x > 1.0:
+                x = 1.0
+            Xliq.append(x)
 
     # ------------------------------------------------------------
     # 5. Mass balance
@@ -114,4 +116,8 @@ def evaluate_at_recovery(state: EutecticPathState,
         Ks=Ks,
         kl=kl,
         solvent=solvent,
+        seg_index=seg_index,
+        seg_start_R=seg.start_R,
+        seg_end_R=seg.end_R,
+        seg_Xsol=list(seg.Xsol),
     )

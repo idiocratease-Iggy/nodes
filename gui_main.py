@@ -60,10 +60,10 @@ def select_main_components(composition_profile, Rmax):
         if k not in main_components and any(row[1][k] > 1e-12 for row in composition_profile)
     ]
 
-    print("[GUI] i_Rmax", i_Rmax)
-    print("[GUI] i_zero", i_zero)
-    print("[GUI] main_components", main_components)
-    print("[GUI] impurity_components", impurity_components)
+    # print("[GUI] i_Rmax", i_Rmax)
+    # print("[GUI] i_zero", i_zero)
+    # print("[GUI] main_components", main_components)
+    # print("[GUI] impurity_components", impurity_components)
 
     return main_components, impurity_components, i_Rmax, i_zero
 
@@ -228,11 +228,11 @@ class MainWindow(QMainWindow):
         ]
         self.impurity_components = sorted(self.impurity_components)
 
-        print("[GUI] i_Rmax =", i_Rmax)
-        print("[GUI] i_zero =", i_zero)
-        print("[GUI] purified_component_indices =", self.purified_component_indices)
-        print("[GUI] main_components =", self.main_components)
-        print("[GUI] impurity_components =", self.impurity_components)
+        # print("[GUI] i_Rmax =", i_Rmax)
+        # print("[GUI] i_zero =", i_zero)
+        # print("[GUI] purified_component_indices =", self.purified_component_indices)
+        # print("[GUI] main_components =", self.main_components)
+        # print("[GUI] impurity_components =", self.impurity_components)
 
     def _clear_plot_area(self):
         for plot_name in ("comp1_plot", "impurity_plot", "solvent_plot"):

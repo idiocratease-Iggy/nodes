@@ -12,48 +12,22 @@ except ImportError:  # pragma: no cover
 
 def print_matrix_layer(layer: Dict[str, Any]) -> None:
     """Print the matrix-layer records to the terminal for comparison with the base block."""
-    print("\n==============================================")
-    print(" MATRIX LAYER SUMMARY")
-    print("==============================================\n")
+    # print("\n==============================================")
+    # print(" MATRIX LAYER SUMMARY")
+    # print("==============================================\n")
 
-    print("[MIXTURE ANCHORS]")
+    # print("[MIXTURE ANCHORS]")
     for anchor in layer.get("mixture_anchors", []):
-        print(
-            f"mixture_id={anchor['mixture_id']} | "
-            f"components={anchor['component_count']} | "
-            f"Rmax={anchor['Rmax']:.6f} | "
-            f"RelSolVol(Rmax)={anchor['RelSolVol_Rmax']:.6f} | "
-            f"slice_count={anchor['slice_count']}"
-        )
-        print(f"  Xc={anchor['Xc']}")
+        pass
 
-    print("\n[SEGMENT ROWS]")
+    # print("\n[SEGMENT ROWS]")
     for segment in layer.get("segments", []):
-        print(
-            f"mixture_id={segment['mixture_id']} | seg={segment['segment_index']} | "
-            f"R={segment['start_R']:.6f} → {segment['end_R']:.6f} | "
-            f"solvent={segment['solvent_start']:.6f} → {segment['solvent_end']:.6f}"
-        )
-        print(f"  Xliq_start={segment['Xliq_start']}")
-        print(f"  Xliq_end={segment['Xliq_end']}")
+        pass
 
-    print("\n[SLICE ROWS]")
+    # print("\n[SLICE ROWS]")
     for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
-        print(f"scenario={scenario_name}")
         for row in rows:
-            print(
-                f"  mixture_id={row['mixture_id']} | slice_index={row['slice_index']} | "
-                f"R={row['R']:.6f} | RelSolVol={row['RelSolVol']:.6f}"
-            )
-            print(f"    Xc={row['Xc']}")
-            print(f"    Xs={row['Xs']}")
-            print(f"    Xliq={row['Xliq']}")
-            print(f"    R_check={row['R_check']}")
-            print(
-                f"    correction_applied={row.get('correction_applied', False)} | "
-                f"correction_flagged={row.get('correction_flagged', False)} | "
-                f"delta_R={row.get('correction_delta_R', 0.0):.6f}"
-            )
+            pass
 
 
 def _safe_list(values: Any) -> List[float]:

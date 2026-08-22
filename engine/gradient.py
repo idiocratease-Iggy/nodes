@@ -3,7 +3,7 @@
 
 
 import profile
-print("Loaded gradient.py from:", __file__)
+# print("Loaded gradient.py from:", __file__)
 
 
 class PurificationModel:

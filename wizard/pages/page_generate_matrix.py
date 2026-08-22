@@ -364,7 +364,7 @@ class PageGenerateMatrix(QWizardPage):
         mixtures = generate_mixture_set(config, num_unique_mixtures=num_unique_mixtures)
         self.model.physchem_matrix = mixtures
 
-        print(f"[Matrix] Generated {len(mixtures)} mixtures in memory")
+        # print(f"[Matrix] Generated {len(mixtures)} mixtures in memory")
         return mixtures
 
 
@@ -496,12 +496,12 @@ class PageGenerateMatrix(QWizardPage):
                     self.model.physchem_matrix = matrix
                 except Exception as exc:
                     raise ValueError(f"Could not load matrix JSON '{json_path}': {exc}") from exc
-            print("DEBUG: GUI branch -> run_multi_mixture_harness_from_json, path =", json_path)
+            # print("DEBUG: GUI branch -> run_multi_mixture_harness_from_json, path =", json_path)
             self.model.canonical_results = run_multi_mixture_harness_from_json(json_path)
         else:
             if not isinstance(matrix, list) or not matrix:
                 raise ValueError("No matrix data available. Generate a matrix or load a JSON file first.")
-            print("DEBUG: GUI branch -> run_multi_mixture_harness_from_gui, len =", len(matrix))
+            # print("DEBUG: GUI branch -> run_multi_mixture_harness_from_gui, len =", len(matrix))
             self.model.canonical_results = run_multi_mixture_harness_from_gui(matrix)
 
         layer = build_matrix_layer(self.model.canonical_results)

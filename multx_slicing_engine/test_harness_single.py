@@ -69,9 +69,9 @@ def run_test(json_data):
     #    print(f"Xc_start: [{xs}]")
     #    print(f"Xc_end:   [{xe}]\n")
 
-    print("\n==============================================")
-    print(" CANONICAL SLICE COMPOSITIONS")
-    print("==============================================\n")
+    # print("\n==============================================")
+    # print(" CANONICAL SLICE COMPOSITIONS")
+    # print("==============================================\n")
 
     slice_points = [0.98, 0.95, 0.92]
 
@@ -79,10 +79,10 @@ def run_test(json_data):
         result = evaluate_recovery(state, segment_grads, R)
 
         xs = ", ".join(f"{v * 100:.2f}%" for v in result.Xliq)
-        print(f"Slice at2 R={R:.2f}")
-        print(f"  Evaluated R: {result.R:.2f}")
-        print(f"  Solvent: {result.solvent:.2f}")
-        print(f"  Composition: [{xs}]")
+        # print(f"Slice at2 R={R:.2f}")
+        # print(f"  Evaluated R: {result.R:.2f}")
+        # print(f"  Solvent: {result.solvent:.2f}")
+        # print(f"  Composition: [{xs}]")
         #print(f"  Ks: {result.Ks:.6f}, kl: {result.kl:.6f}\n")
 
 
@@ -99,7 +99,7 @@ def pick_json_file():
     )
 
     if not path:
-        print("No file selected.")
+        # print("No file selected.")
         sys.exit(0)
 
     return path
@@ -111,5 +111,5 @@ if __name__ == "__main__":
     with open(json_path, "r") as f:
         data = json.load(f)
 
-    print(f"\nLoaded: {json_path}\n")
+    # print(f"\nLoaded: {json_path}\n")
     run_test(data)

@@ -4,6 +4,42 @@ from multx_slicing_engine.evaluate_recovery import evaluate_at_recovery
 
 import random
 
+try:
+    from multx_slicing_engine.evaluate_recovery import _segment_for_recovery
+except ImportError:
+    from evaluate_recovery import _segment_for_recovery
+
+
+def debug_slicing_state(state, slice_results):
+    """Print the canonical node/segment summary and the resulting slice values."""
+    # print("\n=== DEBUG: canonical nodes ===")
+    for node in getattr(state, "nodes", []):
+        pass
+
+    # print("\n=== DEBUG: canonical segments ===")
+    for seg in getattr(state, "segments", []):
+        pass
+
+    segments = list(getattr(state, "segments", []))
+
+    # print("\n=== DEBUG: slice values ===")
+    for slice_result in slice_results:
+        if isinstance(slice_result, dict):
+            R = float(slice_result.get("R", 0.0))
+            slice_xsol = list(slice_result.get("Xsol", []))
+            slice_xliq = list(slice_result.get("Xliq", []))
+        else:
+            R = float(getattr(slice_result, "R", 0.0))
+            slice_xsol = list(getattr(slice_result, "Xsol", []))
+            slice_xliq = list(getattr(slice_result, "Xliq", []))
+
+        seg = _segment_for_recovery(segments, R)
+        seg_xsol = list(getattr(seg, "Xsol", []))
+        pass
+
+    # print("\n=== DEBUG: slice summary complete ===")
+
+
 def generate_slices_for_mixture(summary, num_slices, jitter=0.2):
     """
     Generate slice points between R=1.0 and Rmax for a single mixture.
@@ -49,25 +85,34 @@ def generate_slices_for_mixture(summary, num_slices, jitter=0.2):
         res = evaluate_at_recovery(state, grads, Rj)
         results.append(res)
 
+    # Wire the standalone forensic debug helper into the normal slice-generation flow.
+    debug_slicing_state(state, results)
     return results
 
 
 
 
-def print_slices_to_terminal(mixture_id, slice_results):
+def print_slices_to_terminal(mixture_id, slice_results, state=None):
     """
     Pretty-print slice results to terminal.
     """
-    print("\n==============================================")
-    print(f" SLICES FOR MIXTURE {mixture_id}")
-    print("==============================================\n")
+    # print("\n==============================================")
+    # print(f" SLICES FOR MIXTURE {mixture_id}")
+    # print("==============================================\n")
+
+    if state is not None:
+        debug_slicing_state(state, slice_results)
 
     for s in slice_results:
         xs = ", ".join(f"{v*100:.2f}%" for v in s.Xliq)
-        print(f"Slice at R={s.R:.4f}")
-        print(f"  Solvent(RelSolVol@slice): {s.solvent:.4f}")
-        print(f"  Composition(@slice): [{xs}]")
-        print("")
+        xsol = ", ".join(f"{v:.6f}" for v in s.Xsol)
+        # print(f"Slice at R={s.R:.4f}")
+        # print(f"  seg.index={s.seg_index}  seg.start_R={s.seg_start_R:.6f}  seg.end_R={s.seg_end_R:.6f}")
+        # print(f"  seg.Xsol=[{xsol}]")
+        # print(f"  Xliq=[{xs}]")
+        # print(f"  sum(Xliq)={sum(s.Xliq):.6f}  min={min(s.Xliq):.6f}  max={max(s.Xliq):.6f}")
+        # print(f"  Solvent(RelSolVol@slice): {s.solvent:.4f}")
+        # print("")
 
 
 def resolve_slice_count(summary, fallback_num_slices=3):

@@ -1,7 +1,7 @@
 
 
 
-print("Loaded solvent_gradient.py from:", __file__)
+# print("Loaded solvent_gradient.py from:", __file__)
 
 
 class PurificationModel:

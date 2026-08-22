@@ -169,5 +169,5 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
         wb.remove(wb.active)
 
     wb.save(output_path)
-    print(f"[Excel] Wrote workbook to {output_path}")
+    # print(f"[Excel] Wrote workbook to {output_path}")
     return output_path

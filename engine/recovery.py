@@ -1,7 +1,7 @@
 def compute_recovery(cascade_nodes, lambdas):
-    print("\n==============================")
-    print(" RECOVERY DEBUG (simple)")
-    print("==============================\n")
+    # print("\n==============================")
+    # print(" RECOVERY DEBUG (simple)")
+    # print("==============================\n")
 
     node_recovery = []
     cumulative = 1.0
@@ -15,22 +15,22 @@ def compute_recovery(cascade_nodes, lambdas):
         else:
             R = 1.0
 
-        print(f"--- Node {i} ---")
-        print(f"λ = {lam:.6f}")
-        print(f"Sum(Xeu) = {sum(Xeu):.6f}")
-        print(f"TotalScaled = {total_scaled:.6f}")
-        print(f"SumAfter = {sum_after:.6f}")
-        print(f"Node Recovery = {R*100:.2f}%\n")
+        # print(f"--- Node {i} ---")
+        # print(f"λ = {lam:.6f}")
+        # print(f"Sum(Xeu) = {sum(Xeu):.6f}")
+        # print(f"TotalScaled = {total_scaled:.6f}")
+        # print(f"SumAfter = {sum_after:.6f}")
+        # print(f"Node Recovery = {R*100:.2f}%\n")
 
         node_recovery.append(R)
         cumulative *= R
 
     cumulative_recovery = cumulative
 
-    print("==============================")
-    print(" FINAL RECOVERY (simple)")
-    print("==============================")
-    print(f"Cumulative Recovery = {cumulative_recovery*100:.2f}%\n")
+    # print("==============================")
+    # print(" FINAL RECOVERY (simple)")
+    # print("==============================")
+    # print(f"Cumulative Recovery = {cumulative_recovery*100:.2f}%\n")
 
     return {
         "node_recovery": node_recovery,

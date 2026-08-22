@@ -29,7 +29,7 @@ def run_cascade(mixture, modes, solver="halley"):
             try:
                 result = solve_eutectic_halley(mix, modes)
             except RuntimeError as e:
-                print(f"[HYBRID FALLBACK] case_id={mix.case_id}: {e}")
+                # print(f"[HYBRID FALLBACK] case_id={mix.case_id}: {e}")
                 Tk = solve_eutectic_walkdown(mix, modes)
                 result = {"T_eutectic": Tk}
 

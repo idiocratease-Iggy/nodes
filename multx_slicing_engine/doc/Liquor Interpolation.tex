@@ -1,0 +1,174 @@
+\section*{Canonical eutectic path and liquor interpolation}
+
+We consider a canonical eutectic path discretised into nodes and segments.
+
+\subsection*{Nodes and solids from gradients/intercepts}
+
+Each canonical node \(m\) has an associated eutectic composition
+
+
+\[
+\mathbf{X}^{(m)}_{\mathrm{eu}} = \bigl(X^{(m)}_{\mathrm{eu},1}, \dots, X^{(m)}_{\mathrm{eu},N}\bigr),
+\]
+
+
+obtained from the eutectic model.
+
+Along the path, the solid compositions at the nodes are not arbitrary;
+they are determined by the canonical gradients and intercepts of the
+eutectic path. For each component \(k\),
+
+
+\[
+X^{(m)}_{\mathrm{s},k}
+= a_k + b_k \, f_m,
+\]
+
+
+where \(a_k\) and \(b_k\) are the intercept and gradient for component \(k\),
+and \(f_m\) is the canonical path parameter at node \(m\).
+Thus the solid compositions
+
+
+\[
+\mathbf{X}^{(m)}_{\mathrm{s}} = \bigl(X^{(m)}_{\mathrm{s},1}, \dots, X^{(m)}_{\mathrm{s},N}\bigr)
+\]
+
+
+are fully determined by the gradient/intercept representation of the
+eutectic path. These are the \(X_s\) values used in the slicing engine.
+
+\subsection*{Segments and recovery intervals}
+
+The path is partitioned into segments indexed by \(j\).
+Each segment \(j\) covers a recovery interval
+
+
+\[
+R^{(j)}_{\mathrm{start}} \quad \text{to} \quad R^{(j)}_{\mathrm{end}},
+\]
+
+
+with an associated solid composition \(\mathbf{X}^{(j)}_{\mathrm{s}}\)
+(which is constant within the segment in the canonical representation).
+
+For each segment we also have the liquor compositions at the segment
+boundaries:
+
+
+\[
+\mathbf{X}^{(j)}_{\mathrm{liq,start}}
+\quad \text{and} \quad
+\mathbf{X}^{(j)}_{\mathrm{liq,end}},
+\]
+
+
+which encode the cumulative effect of all previous eutectic removals
+up to \(R^{(j)}_{\mathrm{start}}\) and \(R^{(j)}_{\mathrm{end}}\),
+respectively. In other words, the history of “subtracting eutectic”
+is embedded in these boundary liquors; we do not recompute the full
+liquor path at slice time.
+
+\subsection*{Liquor interpolation within a segment}
+
+Given a target recovery \(R\) lying inside segment \(j\),
+
+
+\[
+R^{(j)}_{\mathrm{end}} \le R \le R^{(j)}_{\mathrm{start}},
+\]
+
+
+we define a local interpolation parameter
+
+
+\[
+t(R) =
+\frac{R^{(j)}_{\mathrm{start}} - R}
+     {R^{(j)}_{\mathrm{start}} - R^{(j)}_{\mathrm{end}}}
+\quad \in [0,1].
+\]
+
+
+
+The liquor composition at recovery \(R\) is then obtained by linear
+interpolation between the segment boundary liquors:
+
+
+\[
+\mathbf{X}_{\mathrm{liq}}(R)
+= (1 - t(R)) \, \mathbf{X}^{(j)}_{\mathrm{liq,start}}
+  + t(R) \, \mathbf{X}^{(j)}_{\mathrm{liq,end}}.
+\]
+
+
+
+Componentwise, for each \(k = 1, \dots, N\),
+
+
+\[
+X_{\mathrm{liq},k}(R)
+= (1 - t(R)) \, X^{(j)}_{\mathrm{liq,start},k}
+  + t(R) \, X^{(j)}_{\mathrm{liq,end},k}.
+\]
+
+
+
+Because both \(\mathbf{X}^{(j)}_{\mathrm{liq,start}}\) and
+\(\mathbf{X}^{(j)}_{\mathrm{liq,end}}\) are valid compositions
+(i.e. each component lies in \([0,1]\) and the vectors are normalised),
+the interpolated liquor \(\mathbf{X}_{\mathrm{liq}}(R)\) is also
+bounded and normalised.
+
+\subsection*{Consistency with the lever rule}
+
+At any slice recovery \(R\), the feed composition \(\mathbf{X}_{\mathrm{c}}\),
+solid composition \(\mathbf{X}_{\mathrm{s}}\), and liquor composition
+\(\mathbf{X}_{\mathrm{liq}}(R)\) satisfy the lever rule:
+
+
+\[
+\mathbf{X}_{\mathrm{c}}
+= R \, \mathbf{X}_{\mathrm{s}}
+  + (1 - R) \, \mathbf{X}_{\mathrm{liq}}(R),
+\]
+
+
+or componentwise,
+
+
+\[
+X_{\mathrm{c},k}
+= R \, X_{\mathrm{s},k}
+  + (1 - R) \, X_{\mathrm{liq},k}(R).
+\]
+
+
+
+Equivalently, for each component \(k\),
+
+
+\[
+R
+= \frac{X_{\mathrm{c},k} - X_{\mathrm{liq},k}(R)}
+       {X_{\mathrm{s},k} - X_{\mathrm{liq},k}(R)},
+\]
+
+
+and all components yield the same recovery \(R\) (within numerical
+tolerance). This is exactly the mass-balance identity you are checking
+in the Excel output.
+
+\subsection*{Summary}
+
+- The solid compositions \(\mathbf{X}_{\mathrm{s}}\) used in the slices
+  come directly from the canonical gradients and intercepts of the
+  eutectic path; they are not invented at slice time.
+- The liquor compositions along the path are represented by their
+  values at segment boundaries, \(\mathbf{X}^{(j)}_{\mathrm{liq,start}}\)
+  and \(\mathbf{X}^{(j)}_{\mathrm{liq,end}}\), which encode the cumulative
+  effect of eutectic removal.
+- For any slice recovery \(R\) inside a segment, the liquor composition
+  is obtained by linear interpolation between these boundary liquors,
+  ensuring bounded, normalised, and mass-balance-consistent
+  \(\mathbf{X}_{\mathrm{liq}}(R)\).

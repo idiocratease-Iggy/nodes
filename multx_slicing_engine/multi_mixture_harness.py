@@ -68,9 +68,9 @@ def print_canonical_summary(summary):
     """Prints node and gradient info for one mixture."""
     state = summary["state"]
 
-    print("\n==============================================")
-    print(" CANONICAL NODES & GRADIENTS")
-    print("==============================================")
+    # print("\n==============================================")
+    # print(" CANONICAL NODES & GRADIENTS")
+    # print("==============================================")
 
     for seg in state.segments:
         if seg.end_R == seg.start_R:
@@ -81,17 +81,17 @@ def print_canonical_summary(summary):
         xs = ", ".join(f"{v:.6f}" for v in seg.Xliq_start)
         xe = ", ".join(f"{v:.6f}" for v in seg.Xliq_end)
 
-        print(f"\nSEGMENT {seg.index}")
-        print(f"Rec: {seg.start_R:.6f} → {seg.end_R:.6f}")
-        print(f"Solvent: {seg.solvent_start:.6f} → {seg.solvent_end:.6f}")
-        print(f"m_sol: {m_sol:.12f}")
-        print(f"Xc_start: [{xs}]")
-        print(f"Xc_end:   [{xe}]")
+        # print(f"\nSEGMENT {seg.index}")
+        # print(f"Rec: {seg.start_R:.6f} → {seg.end_R:.6f}")
+        # print(f"Solvent: {seg.solvent_start:.6f} → {seg.solvent_end:.6f}")
+        # print(f"m_sol: {m_sol:.12f}")
+        # print(f"Xc_start: [{xs}]")
+        # print(f"Xc_end:   [{xe}]")
 
-    print("\n----------------------------------------------")
-    print(f"Rmax: {state.Rmax:.6f}")
-    print(f"RelSolVol(Rmax): {state.solvent_at_Rmax:.6f}")
-    print("----------------------------------------------\n")
+    # print("\n----------------------------------------------")
+    # print(f"Rmax: {state.Rmax:.6f}")
+    # print(f"RelSolVol(Rmax): {state.solvent_at_Rmax:.6f}")
+    # print("----------------------------------------------\n")
 
 
 def _extract_num_unique_mixtures(matrix):
@@ -154,10 +154,10 @@ def _run_multi_mixture_harness(matrix, max_mixtures=None):
     results = []
 
     for idx, mix_dict in enumerate(matrix[:limit]):
-        print(f"\n----------------------------------------------")
-        print(f" MIXTURE {idx+1} / {limit}")
-        print(f" mixture_id: {mix_dict.get('mixture_id', 'N/A')}")
-        print(f"----------------------------------------------")
+        # print(f"\n----------------------------------------------")
+        # print(f" MIXTURE {idx+1} / {limit}")
+        # print(f" mixture_id: {mix_dict.get('mixture_id', 'N/A')}")
+        # print(f"----------------------------------------------")
 
         summary = run_single_mixture(mix_dict)
         results.append(summary)
@@ -185,9 +185,9 @@ def _append_slice_results(canonical_results):
             "slices": summary["slices"],
         })
 
-    print("\n==============================================")
-    print(" SLICES FOR ALL MIXTURES")
-    print("==============================================\n")
+    # print("\n==============================================")
+    # print(" SLICES FOR ALL MIXTURES")
+    # print("==============================================\n")
     for entry in slice_results:
         print_slices_to_terminal(entry["mixture_id"], entry["slices"])
 
@@ -203,12 +203,12 @@ def _emit_matrix_layer_summary(canonical_results):
 
 def run_multi_mixture_harness_from_json(json_path, max_mixtures=None):
     """Load a matrix JSON file and run the canonical harness for the configured subset."""
-    print("DEBUG: Harness JSON mode called, path =", json_path)
+    # print("DEBUG: Harness JSON mode called, path =", json_path)
     resolved_path = resolve_matrix_path(json_path)
-    print("\n==============================================")
-    print(" MULTI-MIXTURE CANONICAL HARNESS")
-    print("==============================================\n")
-    print(f"Loading matrix JSON from: {resolved_path}")
+    # print("\n==============================================")
+    # print(" MULTI-MIXTURE CANONICAL HARNESS")
+    # print("==============================================\n")
+    # print(f"Loading matrix JSON from: {resolved_path}")
 
     with open(resolved_path, "r") as f:
         matrix = json.load(f)
@@ -216,20 +216,20 @@ def run_multi_mixture_harness_from_json(json_path, max_mixtures=None):
     results = _run_multi_mixture_harness(matrix, max_mixtures=max_mixtures)
     _append_slice_results(results)
     _emit_matrix_layer_summary(results)
-    print("DEBUG: Harness JSON mode returning", len(results) if isinstance(results, list) else results)
+    # print("DEBUG: Harness JSON mode returning", len(results) if isinstance(results, list) else results)
     return results
 
 
 def run_multi_mixture_harness_from_gui(matrix_dict_list, max_mixtures=None):
     """Run the canonical harness from the already-built GUI matrix list."""
-    print("DEBUG: Harness GUI mode called, mixtures =", len(matrix_dict_list) if isinstance(matrix_dict_list, list) else 0)
-    print("\n==============================================")
-    print(" MULTI-MIXTURE CANONICAL HARNESS")
-    print("==============================================\n")
-    print(f"Loading matrix from GUI list with {len(matrix_dict_list) if isinstance(matrix_dict_list, list) else 0} entries")
+    # print("DEBUG: Harness GUI mode called, mixtures =", len(matrix_dict_list) if isinstance(matrix_dict_list, list) else 0)
+    # print("\n==============================================")
+    # print(" MULTI-MIXTURE CANONICAL HARNESS")
+    # print("==============================================\n")
+    # print(f"Loading matrix from GUI list with {len(matrix_dict_list) if isinstance(matrix_dict_list, list) else 0} entries")
 
     canonical_results = _run_multi_mixture_harness(matrix_dict_list, max_mixtures=max_mixtures)
-    print("DEBUG: Harness GUI mode returning", len(canonical_results) if isinstance(canonical_results, list) else canonical_results)
+    # print("DEBUG: Harness GUI mode returning", len(canonical_results) if isinstance(canonical_results, list) else canonical_results)
     _append_slice_results(canonical_results)
     _emit_matrix_layer_summary(canonical_results)
     return canonical_results

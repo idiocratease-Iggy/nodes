@@ -48,7 +48,7 @@ def main():
         with open(stylesheet_path, "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
     else:
-        print(f"Warning: Stylesheet not found at {stylesheet_path}")
+        pass
 
     # ⭐ IMPORTANT: import the correct wizard controller
     from wizard.wizard_controller import WizardController

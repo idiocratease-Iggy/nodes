@@ -174,6 +174,168 @@ def _build_relsolvol(summary_matrix: List[List[float]]) -> List[float]:
     return RelSolVol
 
 
+def debug_canonical_mapping(raw_cascade: Any, canonical_state: Any) -> None:
+    """Print a read-only audit of the raw cascade versus the canonical state.
+
+    This helper does not modify the underlying data or canonical builder logic; it
+    only emits a detailed forensic comparison to identify row shifts, duplicated rows,
+    misordered recoveries, and composition mismatches between raw and canonical data.
+    """
+
+    def _as_list(value):
+        if value is None:
+            return []
+        if isinstance(value, (list, tuple)):
+            return list(value)
+        if hasattr(value, "tolist"):
+            return value.tolist()
+        return [value]
+
+    def _safe_float(value, default=0.0):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float(default)
+
+    def _normalize_row(row):
+        if row is None:
+            return []
+        return [float(v) for v in _as_list(row)]
+
+    def _sum_close_to_one(values):
+        return abs(sum(float(v) for v in values) - 1.0) <= 1e-9
+
+    def _print_vector(label, values):
+        if not values:
+            # print(f"    {label}=[]")
+            return
+        # print(f"    {label}={[_safe_float(v) for v in values]}")
+
+    # print("\n=== DEBUG: raw cascade ===")
+    raw_nodes = []
+    raw_recovery = []
+    if isinstance(raw_cascade, dict):
+        cascade = raw_cascade.get("cascade", ())
+        rec = raw_cascade.get("recovery", {})
+        raw_recovery = rec.get("node_recoveries", []) if isinstance(rec, dict) else []
+        if isinstance(cascade, (list, tuple)) and len(cascade) >= 2:
+            raw_nodes_xeu, raw_nodes_mix = cascade[:2]
+            raw_nodes = [
+                {
+                    "index": idx,
+                    "R": raw_recovery[idx] if idx < len(raw_recovery) else None,
+                    "Xeu": _as_list(node),
+                    "Xliq_after": _as_list(mix),
+                }
+                for idx, (node, mix) in enumerate(zip(raw_nodes_xeu, raw_nodes_mix))
+            ]
+    if not raw_nodes:
+        raw_nodes = [
+            {"index": idx, "R": None, "Xeu": [], "Xliq_after": []}
+            for idx in range(len(_as_list(raw_cascade)))
+        ]
+
+    for node in raw_nodes:
+        # print(f"  raw node.index={node.get('index')}")
+        # print(f"    raw R={node.get('R')}")
+        _print_vector("raw Xeu", node.get("Xeu", []))
+        _print_vector("raw Xliq_after", node.get("Xliq_after", []))
+
+    # print("\n=== DEBUG: canonical state ===")
+    canonical_nodes = list(getattr(canonical_state, "nodes", []) or [])
+    for idx, node in enumerate(canonical_nodes):
+        # print(f"  canonical node.index={getattr(node, 'index', idx)}")
+        # print(f"    canonical R={getattr(node, 'recovery', None)}")
+        _print_vector("canonical Xeu", getattr(node, "Xeu", []))
+        _print_vector("canonical Xliq_after", getattr(node, "Xliq_after", []))
+
+    # print("\n=== DEBUG: canonical segments ===")
+    canonical_segments = list(getattr(canonical_state, "segments", []) or [])
+    for seg in canonical_segments:
+        # print(f"  seg.index={getattr(seg, 'index', None)}")
+        # print(f"    seg.start_R={getattr(seg, 'start_R', None)}  seg.end_R={getattr(seg, 'end_R', None)}")
+        _print_vector("seg.Xliq_start", getattr(seg, "Xliq_start", []))
+        _print_vector("seg.Xliq_end", getattr(seg, "Xliq_end", []))
+        if hasattr(seg, "Xsol"):
+            _print_vector("seg.Xsol", getattr(seg, "Xsol", []))
+
+    # print("\n=== DEBUG: row-by-row diff ===")
+    max_len = max(len(raw_nodes), len(canonical_nodes), len(canonical_segments))
+    for idx in range(max_len):
+        raw_node = raw_nodes[idx] if idx < len(raw_nodes) else None
+        canon_node = canonical_nodes[idx] if idx < len(canonical_nodes) else None
+        canon_seg = canonical_segments[idx] if idx < len(canonical_segments) else None
+
+        if raw_node is not None and canon_node is not None:
+            raw_xeu = _normalize_row(raw_node.get("Xeu", []))
+            raw_xliq = _normalize_row(raw_node.get("Xliq_after", []))
+            canon_xeu = _normalize_row(getattr(canon_node, "Xeu", []))
+            canon_xliq = _normalize_row(getattr(canon_node, "Xliq_after", []))
+
+            if len(raw_xeu) and len(canon_xeu) and len(raw_xeu) == len(canon_xeu):
+                diff_xeu = max(abs(float(a) - float(b)) for a, b in zip(raw_xeu, canon_xeu)) if raw_xeu else 0.0
+                if diff_xeu > 1e-9:
+                    pass
+                if any(v < 0.0 for v in canon_xeu):
+                    pass
+                if not _sum_close_to_one(canon_xeu):
+                    pass
+                if len(raw_xliq) and len(canon_xliq) and len(raw_xliq) == len(canon_xliq):
+                    diff_xliq = max(abs(float(a) - float(b)) for a, b in zip(raw_xliq, canon_xliq)) if raw_xliq else 0.0
+                    if diff_xliq > 1e-9:
+                        pass
+            else:
+                pass
+
+            if raw_node.get("R") is not None and getattr(canon_node, "recovery", None) is not None:
+                if abs(float(raw_node.get("R")) - float(getattr(canon_node, "recovery"))) > 1e-9:
+                    pass
+
+        if canon_seg is not None:
+            seg_xliq_start = _normalize_row(getattr(canon_seg, "Xliq_start", []))
+            seg_xliq_end = _normalize_row(getattr(canon_seg, "Xliq_end", []))
+            if seg_xliq_start and seg_xliq_end and not all(abs(float(a) - float(b)) <= 1e-9 for a, b in zip(seg_xliq_start, seg_xliq_end)):
+                pass
+            if any(v < 0.0 for v in seg_xliq_start):
+                pass
+            if any(v < 0.0 for v in seg_xliq_end):
+                pass
+
+        if raw_node is not None and canon_node is None:
+            pass
+        if canon_node is not None and raw_node is None:
+            pass
+        if canon_seg is not None and idx < len(raw_nodes) and raw_nodes[idx] is not None:
+            raw_xeu = _normalize_row(raw_nodes[idx].get("Xeu", []))
+            seg_xsol = _normalize_row(getattr(canon_seg, "Xsol", []))
+            if seg_xsol and len(seg_xsol) == len(raw_xeu):
+                if any(v < 0.0 for v in seg_xsol):
+                    pass
+                if not _sum_close_to_one(seg_xsol):
+                    pass
+
+    # Additional duplicate / pure-component checks
+    pure_row_candidates = []
+    for idx, node in enumerate(canonical_nodes):
+        xeu = _normalize_row(getattr(node, "Xeu", []))
+        if xeu and max(xeu) > 1.0 - 1e-9 and sum(xeu) > 1.0 - 1e-9:
+            pure_row_candidates.append((idx, xeu))
+    if pure_row_candidates:
+        for idx, xeu in pure_row_candidates:
+            pass
+
+    raw_titles = [raw_node.get("Xeu", []) for raw_node in raw_nodes if raw_node.get("Xeu")]
+    if raw_titles and canonical_nodes:
+        for idx, canon_node in enumerate(canonical_nodes):
+            xeu = _normalize_row(getattr(canon_node, "Xeu", []))
+            if any(v > 1.0 - 1e-9 for v in xeu) and xeu.count(max(xeu)) == 1 and len(raw_titles) > idx:
+                raw_xeu = _normalize_row(raw_titles[idx])
+                if max(raw_xeu) < 1.0 - 1e-9:
+                    pass
+
+    # print("\n=== DEBUG: canonical mapping audit complete ===")
+
+
 def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solver: str = "vba") -> EutecticPathState:
     """Construct a canonical state aligned with test_run.py solvent cascade logic."""
     mixture_obj = _coerce_mixture(mixture)
@@ -221,6 +383,11 @@ def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solv
         if start_R < end_R:
             start_R, end_R = end_R, start_R
 
+        end_node_index = idx + 1
+        if end_node_index >= len(nodes):
+            end_node_index = len(nodes) - 1
+
+        Xsol = list(nodes[end_node_index].Xeu)
         segments.append(
             Segment(
                 index=idx,
@@ -228,9 +395,10 @@ def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solv
                 end_R=end_R,
                 Xliq_start=list(start_row[1:]),
                 Xliq_end=list(end_row[1:]),
+                Xsol=Xsol,
                 solvent_start=float(RelSolVol[idx]),
                 solvent_end=float(RelSolVol[idx + 1]),
-                metadata={"node_index": idx},
+                metadata={"node_index": end_node_index, "tk": float(nodes[end_node_index].Tk)   },
             )
         )
 

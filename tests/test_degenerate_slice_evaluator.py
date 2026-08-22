@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from multx_slicing_engine import multi_mixture_harness
-from multx_slicing_engine.canonical_eutectic import _normalize_summary_rows
+from multx_slicing_engine.canonical_eutectic import _normalize_summary_rows, debug_canonical_mapping
 from multx_slicing_engine.canonical_gradients import compute_segment_gradients
 from multx_slicing_engine.canonical_solvent import compute_relsolvol_from_cascade
 from multx_slicing_engine.canonical_types import EutecticPathState, Node, Segment
@@ -47,9 +47,9 @@ def test_normalize_summary_rows_removes_duplicate_recovery_nodes():
 
 def test_evaluate_recovery_prefers_later_segment_after_collapsed_boundaries():
     state = _make_state([
-        Segment(index=0, start_R=1.0, end_R=0.75, Xliq_start=[0.9, 0.1, 0.0], Xliq_end=[0.2, 0.8, 0.0], solvent_start=0.0, solvent_end=0.5, metadata={}),
-        Segment(index=1, start_R=0.75, end_R=0.75, Xliq_start=[0.1, 0.9, 0.0], Xliq_end=[0.1, 0.9, 0.0], solvent_start=0.5, solvent_end=0.5, metadata={}),
-        Segment(index=2, start_R=0.75, end_R=0.50, Xliq_start=[0.1, 0.9, 0.0], Xliq_end=[0.0, 1.0, 0.0], solvent_start=0.5, solvent_end=1.0, metadata={}),
+        Segment(index=0, start_R=1.0, end_R=0.75, Xliq_start=[0.9, 0.1, 0.0], Xliq_end=[0.2, 0.8, 0.0], Xsol=[0.4, 0.6, 0.0], solvent_start=0.0, solvent_end=0.5, metadata={}),
+        Segment(index=1, start_R=0.75, end_R=0.75, Xliq_start=[0.1, 0.9, 0.0], Xliq_end=[0.1, 0.9, 0.0], Xsol=[0.4, 0.6, 0.0], solvent_start=0.5, solvent_end=0.5, metadata={}),
+        Segment(index=2, start_R=0.75, end_R=0.50, Xliq_start=[0.1, 0.9, 0.0], Xliq_end=[0.0, 1.0, 0.0], Xsol=[0.2, 0.8, 0.0], solvent_start=0.5, solvent_end=1.0, metadata={}),
     ])
 
     result = evaluate_at_recovery(state, compute_segment_gradients(state), 0.75)
@@ -59,12 +59,24 @@ def test_evaluate_recovery_prefers_later_segment_after_collapsed_boundaries():
 
 def test_zeroed_component_stays_zero_during_interpolation():
     state = _make_state([
-        Segment(index=0, start_R=1.0, end_R=0.5, Xliq_start=[0.5, 0.0, 0.5], Xliq_end=[0.1, 0.2, 0.7], solvent_start=0.0, solvent_end=1.0, metadata={}),
+        Segment(index=0, start_R=1.0, end_R=0.5, Xliq_start=[0.5, 0.0, 0.5], Xliq_end=[0.1, 0.2, 0.7], Xsol=[0.4, 0.6, 0.0], solvent_start=0.0, solvent_end=1.0, metadata={}),
     ])
 
     result = evaluate_at_recovery(state, compute_segment_gradients(state), 0.75)
 
     assert result.Xliq[1] == pytest.approx(0.0)
+
+
+def test_segment_has_explicit_xsol_and_liquor_stays_bounded():
+    state = _make_state([
+        Segment(index=0, start_R=1.0, end_R=0.5, Xliq_start=[0.5, 0.5, 0.0], Xliq_end=[0.2, 0.8, 0.0], Xsol=[0.4, 0.6, 0.0], solvent_start=0.0, solvent_end=1.0, metadata={}),
+    ])
+
+    result = evaluate_at_recovery(state, compute_segment_gradients(state), 0.75)
+
+    assert result.Xsol == pytest.approx([0.4, 0.6, 0.0])
+    assert result.Xliq == pytest.approx([0.8, 0.2, 0.0])
+    assert all(0.0 <= v <= 1.0 for v in result.Xliq)
 
 
 def test_json_route_prints_slice_section(capsys):
@@ -75,6 +87,34 @@ def test_json_route_prints_slice_section(capsys):
     captured = capsys.readouterr().out
     assert "SLICES FOR MIXTURE" in captured
     assert "SLICES FOR ALL MIXTURES" in captured
+
+
+def test_debug_canonical_mapping_reports_row_mismatches(capsys):
+    raw = {
+        "cascade": (
+            [[0.5, 0.5, 0.0], [0.7, 0.2, 0.1]],
+            [[0.5, 0.5, 0.0], [0.2, 0.8, 0.0]],
+        ),
+        "recovery": {"node_recoveries": [1.0, 0.8]},
+    }
+    state = _make_state([
+        Segment(index=0, start_R=1.0, end_R=0.7, Xliq_start=[0.5, 0.5, 0.0], Xliq_end=[0.2, 0.8, 0.0], Xsol=[0.7, 0.2, 0.1], solvent_start=0.0, solvent_end=0.5, metadata={}),
+        Segment(index=1, start_R=0.7, end_R=0.5, Xliq_start=[0.2, 0.8, 0.0], Xliq_end=[0.0, 1.0, 0.0], Xsol=[0.2, 0.8, 0.0], solvent_start=0.5, solvent_end=1.0, metadata={}),
+    ])
+    state.nodes[0].Xeu = [0.6, 0.4, 0.0]
+    state.nodes[1].Xeu = [0.7, 0.2, 0.1]
+    state.nodes[0].Xliq_after = [0.5, 0.5, 0.0]
+    state.nodes[1].Xliq_after = [0.2, 0.8, 0.0]
+    state.nodes[0].recovery = 1.0
+    state.nodes[1].recovery = 0.8
+
+    debug_canonical_mapping(raw, state)
+
+    captured = capsys.readouterr().out
+    assert "=== DEBUG: raw cascade ===" in captured
+    assert "=== DEBUG: canonical state ===" in captured
+    assert "row-by-row diff" in captured
+    assert "MISMATCH" in captured
 
 
 def test_degenerate_multi_removal_uses_sum_of_removed_fractions():
