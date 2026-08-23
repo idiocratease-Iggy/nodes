@@ -22,6 +22,7 @@ Docs_tmp/
 *.log
 legacy/
 back_end/
+docs/
 
 # Matplotlib cache
 *.matplotlib/
