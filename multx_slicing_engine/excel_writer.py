@@ -81,16 +81,18 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
                 component_count = max(component_count, int(header.split("_")[-1]))
 
         ws.cell(1, 1, value="")
-        ws.cell(2, 1, value="Mixture_id")
+        ws.cell(2, 1, value="mixture_id")
 
         header_labels = {
-            "Mixture_id": "Mixture_id",
+            "mixture_id": "mixture_id",
             "R": "Recovery",
             "RelSolVol": "Rel. Sol. Volume",
             "RelSolVol(Rmax)": "Rel. Sol. Volume @ Rmax",
         }
         for idx, header in enumerate(headers, start=1):
-            if header in header_labels:
+            if header == "":
+                ws.cell(2, idx, value="")
+            elif header in header_labels:
                 ws.cell(2, idx, value=header_labels[header])
             elif header.startswith("Xc_"):
                 component_index = header.split("_")[-1]
@@ -135,6 +137,11 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
                 top=Side(style="thin", color="000000"),
                 bottom=Side(style="thin", color="000000"),
             )
+
+        if "" in headers:
+            blank_col_idx = headers.index("") + 1
+            ws.cell(1, blank_col_idx, value="")
+            ws.cell(2, blank_col_idx, value="")
 
         for row_idx, row in enumerate(sheet_rows, start=3):
             ws.append([_normalise_value(row.get(h)) for h in headers])

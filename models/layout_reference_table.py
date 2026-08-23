@@ -7,35 +7,6 @@ import openpyxl
 from openpyxl import Workbook
 
 
-# ---------------------------------------------------------
-# Hard-coded mixture_ids (proxy for matrix_layer input)
-# ---------------------------------------------------------
-MIXTURE_IDS = [
-    "260823_001", "260823_002", "260823_003", "260823_004",
-    "260823_005", "260823_006", "260823_007", "260823_008",
-    "260823_009", "260823_010", "260823_011", "260823_012",
-    "260823_013", "260823_014", "260823_015", "260823_016",
-    "260823_017", "260823_018", "260823_019", "260823_020",
-]
-
-
-# ---------------------------------------------------------
-# Mode flags
-# ---------------------------------------------------------
-FREE_FORMAT = False       
-PLATE_FORMAT = "6x4"
-ROWS = 6
-COLS = 4
-
-RANDOMIZE_ORDER = False
-FILL_PLATES = True          # ignored in free format
-INCLUDE_REPLICATES = True
-REPLICATE_PERCENT = 25
-INCLUDE_ERROR = True
-ERROR_PERCENT = 5
-
-SLICE_COUNT = 3
-
 
 # ---------------------------------------------------------
 # Layout entry structure (CRYSS DOE lineage)
@@ -87,35 +58,64 @@ def make_experiment_code(mixture_id: str, slice_number: int, well: str) -> str:
 # ---------------------------------------------------------
 # Main builder
 # ---------------------------------------------------------
-def build_layout_reference_table() -> List[dict]:
+def build_layout_reference_table(
+    mixture_ids,
+    slice_count,
+    free_format,
+    plate_format,
+    rows,
+    cols,
+    include_replicates,
+    replicate_percent,
+    fill_plates,
+    include_error,
+    error_percent,
+    randomize_order,
+) -> List[dict]:
 
-    # ---------------------------
-    # FREE FORMAT MODE
-    # ---------------------------
-    if FREE_FORMAT:
+    if not mixture_ids:
+        return []
+
+    ordered_mixture_ids = list(dict.fromkeys(str(mixture_id) for mixture_id in mixture_ids))
+    slice_count = int(slice_count) if slice_count is not None else 1
+    slice_count = max(1, slice_count)
+    free_format = bool(free_format)
+    rows = int(rows)
+    cols = int(cols)
+    include_replicates = bool(include_replicates)
+    replicate_percent = int(replicate_percent)
+    fill_plates = bool(fill_plates)
+    include_error = bool(include_error)
+    error_percent = int(error_percent)
+    randomize_order = bool(randomize_order)
+
+    if free_format:
         wells_per_plate = 999999  # effectively infinite
         fixed_wells = None
     else:
-        fixed_wells = generate_well_addresses(ROWS, COLS)
+        fixed_wells = generate_well_addresses(rows, cols)
         wells_per_plate = len(fixed_wells)
 
     # 1) Base experiments
-    n_mixtures = len(MIXTURE_IDS)
-    base_experiments = n_mixtures * SLICE_COUNT
+    n_mixtures = len(ordered_mixture_ids)
+    base_experiments = n_mixtures * slice_count
 
     # 2) Replicate percentage
-    extra_replicates = math.ceil(base_experiments * (REPLICATE_PERCENT / 100.0))
+    extra_replicates = math.ceil(base_experiments * (replicate_percent / 100.0)) if include_replicates else 0
     total_experiments = base_experiments + extra_replicates
 
     # 3) Fill-plate logic (only in fixed format)
     fill_plate_extras = 0
-    if not FREE_FORMAT and FILL_PLATES:
+    if not free_format and fill_plates:
         leftover = total_experiments % wells_per_plate
         if leftover > 0:
             fill_plate_extras = wells_per_plate - leftover
             total_experiments += fill_plate_extras
 
-    print("DEBUG: FREE_FORMAT =", FREE_FORMAT)
+    print("DEBUG: FREE_FORMAT =", free_format)
+    print("DEBUG: plate_format =", plate_format)
+    print("DEBUG: rows =", rows)
+    print("DEBUG: cols =", cols)
     print("DEBUG: base_experiments =", base_experiments)
     print("DEBUG: extra_replicates =", extra_replicates)
     print("DEBUG: fill_plate_extras =", fill_plate_extras)
@@ -125,11 +125,7 @@ def build_layout_reference_table() -> List[dict]:
 
     # 4) Build rows
     for exp_index in range(total_experiments):
-
-        # ---------------------------
-        # Plate / Well assignment
-        # ---------------------------
-        if FREE_FORMAT:
+        if free_format:
             plate_number = 1
             well_address = f"{exp_index+1:03d}"
             origin_plate_ref = ""
@@ -145,17 +141,11 @@ def build_layout_reference_table() -> List[dict]:
                 else ""
             )
 
-        # ---------------------------
-        # Back-map mixture/slice
-        # ---------------------------
         base_index = exp_index % base_experiments
-        mixture_idx = base_index // SLICE_COUNT
-        slice_number = (base_index % SLICE_COUNT) + 1
-        mixture_id = MIXTURE_IDS[mixture_idx]
+        mixture_idx = base_index // slice_count
+        slice_number = (base_index % slice_count) + 1
+        mixture_id = ordered_mixture_ids[mixture_idx]
 
-        # ---------------------------
-        # Replicate status
-        # ---------------------------
         if exp_index < base_experiments:
             replicate_status = "Base"
             replicate_index = 1
@@ -169,43 +159,34 @@ def build_layout_reference_table() -> List[dict]:
             replicate_index = (exp_index - base_experiments - extra_replicates) + 1
             id_suffix = f"F{replicate_index}"
 
-        # ---------------------------
-        # ID generation
-        # ---------------------------
         base_exp_id = f"EXP{base_index+1:03d}"
         id_full = base_exp_id + id_suffix
-
-        # ---------------------------
-        # Experiment code
-        # ---------------------------
-        experiment_code = make_experiment_code(
-            mixture_id, slice_number, well_address
-        )
+        experiment_code = make_experiment_code(mixture_id, slice_number, well_address)
 
         entry = LayoutEntry(
             id=id_full,
             origin_id=base_exp_id,
             origin_plate_ref=origin_plate_ref,
             replicate_status=replicate_status,
-
             mixture_id=mixture_id,
             slice_number=slice_number,
-
             plate_number=plate_number,
             well_address=well_address,
             block_number=block_number,
-
             replicate_index=replicate_index,
             experiment_code=experiment_code,
-
-            free_format=FREE_FORMAT,
-            fill_plates=FILL_PLATES,
-            replicate_percent=REPLICATE_PERCENT,
-            include_error=INCLUDE_ERROR,
-            error_percent=ERROR_PERCENT,
+            free_format=free_format,
+            fill_plates=fill_plates,
+            replicate_percent=replicate_percent,
+            include_error=include_error,
+            error_percent=error_percent,
         )
 
         table.append(asdict(entry))
+
+    if randomize_order:
+        import random
+        random.shuffle(table)
 
     return table
 
@@ -214,7 +195,20 @@ def build_layout_reference_table() -> List[dict]:
 # Excel writer
 # ---------------------------------------------------------
 def write_excel(filename="layout_test.xlsx"):
-    layout = build_layout_reference_table()
+    layout = build_layout_reference_table(
+        mixture_ids=["260823_001", "260823_002", "260823_003", "260823_004"],
+        slice_count=3,
+        free_format=False,
+        plate_format="6x4",
+        rows=6,
+        cols=4,
+        include_replicates=True,
+        replicate_percent=25,
+        fill_plates=True,
+        include_error=True,
+        error_percent=5,
+        randomize_order=False,
+    )
 
     wb = Workbook()
 
@@ -226,7 +220,7 @@ def write_excel(filename="layout_test.xlsx"):
         "Slice Number",
         "Experiment Code",
     ]
-    if not FREE_FORMAT:
+    if not False:
         tracking_headers = [
             "ID",
             "Origin ID",
@@ -239,13 +233,12 @@ def write_excel(filename="layout_test.xlsx"):
             "Experiment Code",
         ]
 
-    # Sheet 1 — CRYSS DOE tracking sheet
     ws1 = wb.active
     ws1.title = "LayoutTracking"
     ws1.append(tracking_headers)
 
     for row in layout:
-        if FREE_FORMAT:
+        if False:
             ws1.append([
                 row["id"],
                 row["origin_id"],
@@ -267,10 +260,9 @@ def write_excel(filename="layout_test.xlsx"):
                 row["experiment_code"],
             ])
 
-    # Sheet 2 — Minimal experiment design sheet
     ws2 = wb.create_sheet("ExperimentDesign")
 
-    if FREE_FORMAT:
+    if False:
         design_headers = [
             "Experiment Code",
             "Mixture ID",

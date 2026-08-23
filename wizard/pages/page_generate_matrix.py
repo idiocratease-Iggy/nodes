@@ -30,6 +30,8 @@ from PyQt6.QtGui import QPainter, QPen, QFont
 import json
 import os
 import string
+import sys
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -46,6 +48,15 @@ from multx_slicing_engine.matrix_layer import build_matrix_layer
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+MODEL_DIR = ROOT_DIR / "models"
+if str(MODEL_DIR) not in sys.path:
+    sys.path.insert(0, str(MODEL_DIR))
+
+try:
+    import layout_reference_table as layout_ref
+except ImportError:  # pragma: no cover
+    layout_ref = None
 
 
 # ---------------------------------------------------------
@@ -368,12 +379,164 @@ class PageGenerateMatrix(QWizardPage):
         return mixtures
 
 
+    def _get_layout_settings(self):
+        free_format = self.rb_free.isChecked()
+
+        if free_format:
+            rows = int(self.spin_rows.value())
+            cols = int(self.spin_cols.value())
+            plate_format = "free"
+        else:
+            if self.rb_4x3.isChecked():
+                rows, cols = 3, 4
+            elif self.rb_3x5.isChecked():
+                rows, cols = 3, 5
+            elif self.rb_6x4.isChecked():
+                rows, cols = 4, 6
+            elif self.rb_8x6.isChecked():
+                rows, cols = 6, 8
+            elif self.rb_12x8.isChecked():
+                rows, cols = 8, 12
+            else:
+                rows = int(self.spin_rows.value())
+                cols = int(self.spin_cols.value())
+            plate_format = f"{rows}x{cols}"
+
+        settings = {
+            "free_format": free_format,
+            "plate_format": plate_format,
+            "rows": rows,
+            "cols": cols,
+            "fill_plates": bool(self.checkbox_fill_full.isChecked()) and not free_format,
+            "randomize_order": bool(self.chk_randomize.isChecked()),
+            "include_replicates": bool(self.chk_repl.isChecked()),
+            "replicate_percent": int(self.spin_repl.value()) if self.chk_repl.isChecked() else 0,
+            "include_error": bool(self.chk_error.isChecked()),
+            "error_percent": int(self.spin_error.value()) if self.chk_error.isChecked() else 0,
+            "number_of_slices": int(getattr(self.model, "max_slices", getattr(self.model, "num_systems", 3)) or 3),
+        }
+
+        self.model.free_format = settings["free_format"]
+        self.model.plate_format = settings["plate_format"]
+        self.model.rows = settings["rows"]
+        self.model.cols = settings["cols"]
+        self.model.fill_plates = settings["fill_plates"]
+        self.model.randomize_order = settings["randomize_order"]
+        self.model.include_replicates = settings["include_replicates"]
+        self.model.replicate_percent = settings["replicate_percent"]
+        self.model.include_error = settings["include_error"]
+        self.model.error_percent = settings["error_percent"]
+        self.model.slice_count = settings["number_of_slices"]
+        return settings
+
+    def _apply_layout_reference_settings(self, settings):
+        if layout_ref is None:
+            return
+
+        self.model.free_format = bool(settings["free_format"])
+        self.model.plate_format = settings["plate_format"]
+        self.model.rows = int(settings["rows"])
+        self.model.cols = int(settings["cols"])
+        self.model.fill_plates = bool(settings["fill_plates"])
+        self.model.randomize_order = bool(settings["randomize_order"])
+        self.model.include_replicates = bool(settings["include_replicates"])
+        self.model.replicate_percent = int(settings["replicate_percent"])
+        self.model.include_error = bool(settings["include_error"])
+        self.model.error_percent = int(settings["error_percent"])
+        self.model.slice_count = int(settings["number_of_slices"])
+
+    def _merge_layout_metadata(self, metadata_row, slice_row, settings):
+        component_count = 0
+        for key in list(slice_row.keys()):
+            if key.startswith("Xc_"):
+                component_count = max(component_count, int(key.split("_")[-1]))
+            elif key.startswith("Xs_"):
+                component_count = max(component_count, int(key.split("_")[-1]))
+            elif key.startswith("Xliq_"):
+                component_count = max(component_count, int(key.split("_")[-1]))
+
+        ordered = []
+        ordered.append("mixture_id")
+        for idx in range(1, component_count + 1):
+            ordered.append(f"Xc_{idx}")
+        for idx in range(1, component_count + 1):
+            ordered.append(f"Xs_{idx}")
+        for idx in range(1, component_count + 1):
+            ordered.append(f"Xliq_{idx}")
+        ordered.extend(["R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"])
+        ordered.append("")
+        if settings["free_format"]:
+            ordered.extend(["id", "origin_id", "replicate_status", "replicate_index", "block_number", "slice_number", "experiment_code"])
+        else:
+            ordered.extend(["id", "origin_id", "origin_plate_ref", "replicate_status", "replicate_index", "plate_number", "well_address", "block_number", "slice_number", "experiment_code"])
+
+        merged = {header: None for header in ordered}
+        merged["mixture_id"] = slice_row.get("mixture_id")
+        for idx in range(1, component_count + 1):
+            merged[f"Xc_{idx}"] = slice_row.get(f"Xc_{idx}")
+            merged[f"Xs_{idx}"] = slice_row.get(f"Xs_{idx}")
+            merged[f"Xliq_{idx}"] = slice_row.get(f"Xliq_{idx}")
+        merged["R"] = slice_row.get("R")
+        merged["RelSolVol"] = slice_row.get("RelSolVol")
+        merged["Rmax"] = slice_row.get("Rmax")
+        merged["RelSolVol(Rmax)"] = slice_row.get("RelSolVol(Rmax)")
+        merged[""] = ""
+        merged["id"] = metadata_row.get("id", "")
+        merged["origin_id"] = metadata_row.get("origin_id", "")
+        if not settings["free_format"]:
+            merged["origin_plate_ref"] = metadata_row.get("origin_plate_ref", "")
+        merged["replicate_status"] = metadata_row.get("replicate_status", "")
+        merged["replicate_index"] = metadata_row.get("replicate_index", "")
+        if not settings["free_format"]:
+            merged["plate_number"] = metadata_row.get("plate_number", "")
+            merged["well_address"] = metadata_row.get("well_address", "")
+        merged["block_number"] = metadata_row.get("block_number", "")
+        merged["slice_number"] = metadata_row.get("slice_number", slice_row.get("slice_index", 1))
+        merged["experiment_code"] = metadata_row.get("experiment_code", "")
+
+        merged["slice_count"] = slice_row.get("slice_count")
+        merged["slice_index"] = slice_row.get("slice_index")
+        return merged
+
     def _build_export_rows(self, layer):
         anchors_by_mixture = {
             anchor.get("mixture_id"): anchor
             for anchor in layer.get("mixture_anchors", [])
             if anchor.get("mixture_id")
         }
+
+        settings = self._get_layout_settings()
+        self._apply_layout_reference_settings(settings)
+
+        all_slice_rows = []
+        for rows in layer.get("slice_arrays", {}).values():
+            all_slice_rows.extend(rows)
+
+        mixture_ids = sorted({str(row.get("mixture_id")) for row in all_slice_rows if row.get("mixture_id")})
+
+        if layout_ref is not None:
+            metadata_rows = list(layout_ref.build_layout_reference_table(
+                mixture_ids=mixture_ids,
+                slice_count=int(self.model.slice_count),
+                free_format=bool(self.model.free_format),
+                plate_format=str(self.model.plate_format),
+                rows=int(self.model.rows),
+                cols=int(self.model.cols),
+                include_replicates=bool(self.model.include_replicates),
+                replicate_percent=int(self.model.replicate_percent),
+                fill_plates=bool(self.model.fill_plates),
+                include_error=bool(self.model.include_error),
+                error_percent=int(self.model.error_percent),
+                randomize_order=bool(self.model.randomize_order),
+            ))
+            metadata_lookup = defaultdict(list)
+            for metadata_row in metadata_rows:
+                mixture_id = metadata_row.get("mixture_id")
+                slice_number = metadata_row.get("slice_number")
+                if mixture_id and slice_number is not None:
+                    metadata_lookup[(str(mixture_id), int(slice_number))].append(metadata_row)
+        else:
+            metadata_lookup = defaultdict(list)
 
         export_rows = []
         for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
@@ -384,7 +547,7 @@ class PageGenerateMatrix(QWizardPage):
                 x_s = row.get("Xs", []) or []
                 x_l = row.get("Xliq", []) or []
                 row_data = {
-                    "Mixture_id": row.get("mixture_id"),
+                    "mixture_id": row.get("mixture_id"),
                     "Rmax": anchor.get("Rmax"),
                     "RelSolVol(Rmax)": anchor.get("RelSolVol_Rmax"),
                 }
@@ -398,7 +561,27 @@ class PageGenerateMatrix(QWizardPage):
                 row_data["RelSolVol"] = row.get("RelSolVol")
                 row_data["slice_count"] = slice_count
                 row_data["slice_index"] = row.get("slice_index")
-                export_rows.append(row_data)
+
+                key = (str(row.get("mixture_id")), int(row.get("slice_index", 1)))
+                matching_metadata = metadata_lookup.get(key, [])
+                if not matching_metadata:
+                    matching_metadata = [{
+                        "id": f"{row.get('mixture_id') or 'UNKNOWN'}_S{row.get('slice_index', 1):02d}",
+                        "origin_id": "",
+                        "origin_plate_ref": "",
+                        "replicate_status": "Base",
+                        "replicate_index": 1,
+                        "plate_number": "",
+                        "well_address": "",
+                        "block_number": "",
+                        "mixture_id": row.get("mixture_id"),
+                        "slice_number": row.get("slice_index", 1),
+                        "experiment_code": "",
+                        "free_format": settings["free_format"],
+                    }]
+
+                for metadata_row in matching_metadata:
+                    export_rows.append(self._merge_layout_metadata(metadata_row, row_data, settings))
         return export_rows
 
     def write_matrix_layer_exports(self, layer=None, output_dir=None):
@@ -410,42 +593,34 @@ class PageGenerateMatrix(QWizardPage):
 
         written_files = []
         export_rows = self._build_export_rows(layer)
-        for slice_count in sorted({int(row.get("slice_count", 0)) for row in export_rows if row.get("slice_count") is not None}):
-            rows_for_slice = [row for row in export_rows if row.get("slice_count") == slice_count]
+        grouped_rows = defaultdict(list)
+        for row in export_rows:
+            grouped_rows[int(row.get("slice_count", 0) or 0)].append(row)
+
+        for slice_count in sorted(grouped_rows):
+            rows_for_slice = grouped_rows[slice_count]
             if not rows_for_slice:
                 continue
 
-            headers = ["Mixture_id"]
-            component_count = max(len(row.get("Xc_1", [])) if False else 0, 0)
-            for anchor in layer.get("mixture_anchors", []):
-                component_count = max(component_count, len(anchor.get("Xc", []) or []))
-            for idx in range(1, component_count + 1):
-                headers.append(f"Xc_{idx}")
-            for idx in range(1, component_count + 1):
-                headers.append(f"Xs_{idx}")
-            for idx in range(1, component_count + 1):
-                headers.append(f"Xliq_{idx}")
-            headers.extend(["R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"])
-
+            headers = list(rows_for_slice[0].keys())
             workbook_rows = []
             for row in rows_for_slice:
-                workbook_row = {header: None for header in headers}
-                for header in headers:
-                    if header.startswith("Xc_"):
-                        workbook_row[header] = row.get(header)
-                    elif header.startswith("Xs_"):
-                        workbook_row[header] = row.get(header)
-                    elif header.startswith("Xliq_"):
-                        workbook_row[header] = row.get(header)
-                    elif header in {"Mixture_id", "R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"}:
-                        workbook_row[header] = row.get(header)
-                workbook_rows.append(workbook_row)
+                workbook_rows.append({header: row.get(header) for header in headers})
 
             timestamp = datetime.now().strftime("%y%m%d_%H%M")
             output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}.xlsx"
-            export_rows_for_sheet = [{header: row.get(header) for header in headers} for row in workbook_rows]
-            write_excel(output_path, {"slice_records": export_rows_for_sheet})
+            write_excel(output_path, {"slice_records": workbook_rows})
             written_files.append(str(output_path))
+
+        final_rows = sorted(
+            [row for row in export_rows if row.get("ID") is not None],
+            key=lambda row: str(row.get("ID", "")),
+        )
+        final_combined_path = output_dir / "final_combined.xlsx"
+        if final_rows:
+            final_headers = list(final_rows[0].keys())
+            final_export = [{header: row.get(header) for header in final_headers} for row in final_rows]
+            write_excel(final_combined_path, {"slice_records": final_export})
 
         if written_files:
             self.model.last_export_path = written_files[-1]
