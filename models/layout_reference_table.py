@@ -1,6 +1,7 @@
 # layout_reference_table.py
 
 import math
+import random
 from dataclasses import dataclass, asdict
 from typing import List
 import openpyxl
@@ -55,6 +56,56 @@ def make_experiment_code(mixture_id: str, slice_number: int, well: str) -> str:
     return f"EXP_{mixture_id}_S{slice_number}_{well}"
 
 
+def status_rank(row):
+    status = row.get("replicate_status", "")
+    if status == "Base":
+        return 0
+    if status == "Replicate":
+        return 1
+    if status == "Extra replicate (plate filling)":
+        return 2
+    return 3
+
+
+def sort_layout_rows(rows: List[dict]) -> List[dict]:
+    return sorted(
+        rows,
+        key=lambda r: (
+            status_rank(r),
+            str(r.get("id", "")),
+            str(r.get("mixture_id", "")),
+            int(r.get("slice_number", 0) or 0),
+            str(r.get("well_address", "")),
+        ),
+    )
+
+
+def apply_experimental_error(rows: List[dict], error_percent: int) -> List[dict]:
+    mutated_rows = [dict(row) for row in rows]
+    if error_percent <= 0:
+        return mutated_rows
+
+    for row in mutated_rows:
+        for key, value in list(row.items()):
+            if key.startswith(("Xc_", "Xs_", "Xliq_")) and value not in (None, ""):
+                try:
+                    numeric_value = float(value)
+                    multiplier = 1.0 + (error_percent / 100.0) * (1 if random.random() >= 0.5 else -1)
+                    row[key] = numeric_value * multiplier
+                except (TypeError, ValueError):
+                    continue
+
+            if key in {"R", "RelSolVol", "Rmax", "RelSolVol(Rmax)"} and value not in (None, ""):
+                try:
+                    numeric_value = float(value)
+                    multiplier = 1.0 + (error_percent / 100.0) * (1 if random.random() >= 0.5 else -1)
+                    row[key] = numeric_value * multiplier
+                except (TypeError, ValueError):
+                    continue
+
+    return mutated_rows
+
+
 # ---------------------------------------------------------
 # Main builder
 # ---------------------------------------------------------
@@ -70,7 +121,6 @@ def build_layout_reference_table(
     fill_plates,
     include_error,
     error_percent,
-    randomize_order,
 ) -> List[dict]:
 
     if not mixture_ids:
@@ -87,7 +137,6 @@ def build_layout_reference_table(
     fill_plates = bool(fill_plates)
     include_error = bool(include_error)
     error_percent = int(error_percent)
-    randomize_order = bool(randomize_order)
 
     if free_format:
         wells_per_plate = 999999  # effectively infinite
@@ -96,15 +145,11 @@ def build_layout_reference_table(
         fixed_wells = generate_well_addresses(rows, cols)
         wells_per_plate = len(fixed_wells)
 
-    # 1) Base experiments
     n_mixtures = len(ordered_mixture_ids)
     base_experiments = n_mixtures * slice_count
-
-    # 2) Replicate percentage
     extra_replicates = math.ceil(base_experiments * (replicate_percent / 100.0)) if include_replicates else 0
     total_experiments = base_experiments + extra_replicates
 
-    # 3) Fill-plate logic (only in fixed format)
     fill_plate_extras = 0
     if not free_format and fill_plates:
         leftover = total_experiments % wells_per_plate
@@ -112,85 +157,120 @@ def build_layout_reference_table(
             fill_plate_extras = wells_per_plate - leftover
             total_experiments += fill_plate_extras
 
-    print("DEBUG: FREE_FORMAT =", free_format)
-    print("DEBUG: plate_format =", plate_format)
-    print("DEBUG: rows =", rows)
-    print("DEBUG: cols =", cols)
-    print("DEBUG: base_experiments =", base_experiments)
-    print("DEBUG: extra_replicates =", extra_replicates)
-    print("DEBUG: fill_plate_extras =", fill_plate_extras)
-    print("DEBUG: total_experiments =", total_experiments)
-
-    table: List[dict] = []
-
-    # 4) Build rows for a single slice scenario.
-    # Each call to this function represents one independent plate layout, so the
-    # numbering and well addressing must restart from 1 / A1 for that scenario.
-    for exp_index in range(total_experiments):
-        if free_format:
-            plate_number = 1
-            well_address = f"{exp_index+1:03d}"
-            origin_plate_ref = ""
-            block_number = 1
-        else:
-            plate_number = (exp_index // wells_per_plate) + 1
-            well_index = exp_index % wells_per_plate
-            well_address = fixed_wells[well_index]
-            block_number = 1
-            origin_plate_ref = (
-                f"Plate{plate_number}.{well_address}"
-                if exp_index < base_experiments
-                else ""
-            )
-
-        base_index = exp_index % base_experiments
+    base_rows: List[dict] = []
+    for base_index in range(base_experiments):
         mixture_idx = base_index // slice_count
         slice_number = (base_index % slice_count) + 1
         mixture_id = ordered_mixture_ids[mixture_idx]
-
-        if exp_index < base_experiments:
-            replicate_status = "Base"
-            replicate_index = 1
-            id_suffix = ""
-        elif exp_index < base_experiments + extra_replicates:
-            replicate_status = "Replicate"
-            replicate_index = (exp_index - base_experiments) + 1
-            id_suffix = f"R{replicate_index}"
-        else:
-            replicate_status = "Extra replicate (plate filling)"
-            replicate_index = (exp_index - base_experiments - extra_replicates) + 1
-            id_suffix = f"F{replicate_index}"
-
         base_exp_id = f"EXP{base_index+1:03d}"
-        id_full = base_exp_id + id_suffix
-        experiment_code = make_experiment_code(mixture_id, slice_number, well_address)
 
         entry = LayoutEntry(
-            id=id_full,
+            id=base_exp_id,
             origin_id=base_exp_id,
-            origin_plate_ref=origin_plate_ref,
-            replicate_status=replicate_status,
+            origin_plate_ref="",
+            replicate_status="Base",
             mixture_id=mixture_id,
             slice_number=slice_number,
-            plate_number=plate_number,
-            well_address=well_address,
-            block_number=block_number,
-            replicate_index=replicate_index,
-            experiment_code=experiment_code,
+            plate_number=0,
+            well_address="",
+            block_number=1,
+            replicate_index=1,
+            experiment_code="",
             free_format=free_format,
             fill_plates=fill_plates,
             replicate_percent=replicate_percent,
             include_error=include_error,
             error_percent=error_percent,
         )
+        base_rows.append(asdict(entry))
 
-        table.append(asdict(entry))
+    replicate_rows: List[dict] = []
+    if extra_replicates:
+        replicate_candidates = random.sample(base_rows, k=extra_replicates) if base_rows else []
+        for replicate_index, source_row in enumerate(replicate_candidates, start=1):
+            source_origin_id = source_row["origin_id"]
+            entry = LayoutEntry(
+                id=f"{source_origin_id}R{replicate_index}",
+                origin_id=source_origin_id,
+                origin_plate_ref="",
+                replicate_status="Replicate",
+                mixture_id=source_row["mixture_id"],
+                slice_number=source_row["slice_number"],
+                plate_number=0,
+                well_address="",
+                block_number=1,
+                replicate_index=replicate_index,
+                experiment_code="",
+                free_format=free_format,
+                fill_plates=fill_plates,
+                replicate_percent=replicate_percent,
+                include_error=include_error,
+                error_percent=error_percent,
+            )
+            replicate_rows.append(asdict(entry))
+        replicate_rows.sort(key=lambda r: r["mixture_id"])
 
-    if randomize_order:
-        import random
-        random.shuffle(table)
+    fill_rows: List[dict] = []
+    if base_rows and fill_plate_extras:
+        fill_candidates = random.sample(base_rows, k=min(fill_plate_extras, len(base_rows)))
+        for fill_index, source_row in enumerate(fill_candidates, start=1):
+            source_origin_id = source_row.get("origin_id", f"EXP{fill_index + 1:03d}")
+            entry = LayoutEntry(
+                id=f"{source_origin_id}F{fill_index}",
+                origin_id=source_origin_id,
+                origin_plate_ref="",
+                replicate_status="Extra replicate (plate filling)",
+                mixture_id=source_row.get("mixture_id", ordered_mixture_ids[0] if ordered_mixture_ids else ""),
+                slice_number=source_row.get("slice_number", 1),
+                plate_number=0,
+                well_address="",
+                block_number=1,
+                replicate_index=fill_index,
+                experiment_code="",
+                free_format=free_format,
+                fill_plates=fill_plates,
+                replicate_percent=replicate_percent,
+                include_error=include_error,
+                error_percent=error_percent,
+            )
+            fill_rows.append(asdict(entry))
+    fill_rows.sort(key=lambda r: r["mixture_id"])
 
-    return table
+    final_rows: List[dict] = []
+    final_rows.extend(base_rows)
+    final_rows.extend(replicate_rows)
+    final_rows.extend(fill_rows)
+    final_rows = sort_layout_rows(final_rows)
+
+    if free_format:
+        for row_index, row in enumerate(final_rows):
+            row["plate_number"] = 1
+            row["well_address"] = f"{row_index + 1:03d}"
+            row["block_number"] = 1
+            row["experiment_code"] = make_experiment_code(row["mixture_id"], row["slice_number"], row["well_address"])
+    else:
+        for row_index, row in enumerate(final_rows):
+            row["plate_number"] = (row_index // wells_per_plate) + 1
+            row["well_address"] = fixed_wells[row_index % wells_per_plate]
+            row["block_number"] = 1
+            row["experiment_code"] = make_experiment_code(row["mixture_id"], row["slice_number"], row["well_address"])
+
+        base_plate_refs = {
+            row["origin_id"]: f"Plate{row['plate_number']}.{row['well_address']}"
+            for row in final_rows
+            if row["replicate_status"] == "Base"
+        }
+
+        for row in final_rows:
+            if row["replicate_status"] == "Base":
+                row["origin_plate_ref"] = base_plate_refs.get(row["origin_id"], "")
+            elif row["origin_id"] in base_plate_refs:
+                row["origin_plate_ref"] = base_plate_refs[row["origin_id"]]
+            else:
+                row["origin_plate_ref"] = ""
+            row["experiment_code"] = make_experiment_code(row["mixture_id"], row["slice_number"], row["well_address"])
+
+    return final_rows
 
 
 # ---------------------------------------------------------
@@ -209,7 +289,6 @@ def write_excel(filename="layout_test.xlsx"):
         fill_plates=True,
         include_error=True,
         error_percent=5,
-        randomize_order=False,
     )
 
     wb = Workbook()
@@ -228,6 +307,7 @@ def write_excel(filename="layout_test.xlsx"):
             "Origin ID",
             "Origin Plate Ref",
             "Replicate Status",
+            "Replicate Index",
             "Plate",
             "Well",
             "Mixture ID",
@@ -255,6 +335,7 @@ def write_excel(filename="layout_test.xlsx"):
                 row["origin_id"],
                 row["origin_plate_ref"],
                 row["replicate_status"],
+                row["replicate_index"],
                 f"Plate{row['plate_number']}",
                 row["well_address"],
                 row["mixture_id"],

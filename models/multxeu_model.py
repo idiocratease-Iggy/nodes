@@ -39,7 +39,6 @@ class MultXeuModel:
     free_format: bool = False
 
     # Plate metadata
-    randomize_design: bool = False
     fill_to_full_plates: bool = False
 
     # Replicates

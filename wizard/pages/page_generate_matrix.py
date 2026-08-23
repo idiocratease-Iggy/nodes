@@ -38,6 +38,7 @@ from pathlib import Path
 from models.multxeu_model import MultXeuModel
 from mixture_generator import generate_mixture_set
 from input_writer import write_json
+from error import apply_error
 from multx_slicing_engine.multi_mixture_harness import (
     run_multi_mixture_harness_from_json,
     run_multi_mixture_harness_from_gui,
@@ -217,9 +218,7 @@ class PageGenerateMatrix(QWizardPage):
         # -----------------------------------------------------
         options_group = QGroupBox("Experimental Options")
         options_layout = QVBoxLayout()
-        self.chk_randomize = QCheckBox("Randomize order")
         self.checkbox_fill_full = QCheckBox("Fill plates")
-        options_layout.addWidget(self.chk_randomize)
         options_layout.addWidget(self.checkbox_fill_full)
         options_group.setLayout(options_layout)
         options_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -408,7 +407,6 @@ class PageGenerateMatrix(QWizardPage):
             "rows": rows,
             "cols": cols,
             "fill_plates": bool(self.checkbox_fill_full.isChecked()) and not free_format,
-            "randomize_order": bool(self.chk_randomize.isChecked()),
             "include_replicates": bool(self.chk_repl.isChecked()),
             "replicate_percent": int(self.spin_repl.value()) if self.chk_repl.isChecked() else 0,
             "include_error": bool(self.chk_error.isChecked()),
@@ -421,7 +419,6 @@ class PageGenerateMatrix(QWizardPage):
         self.model.rows = settings["rows"]
         self.model.cols = settings["cols"]
         self.model.fill_plates = settings["fill_plates"]
-        self.model.randomize_order = settings["randomize_order"]
         self.model.include_replicates = settings["include_replicates"]
         self.model.replicate_percent = settings["replicate_percent"]
         self.model.include_error = settings["include_error"]
@@ -438,7 +435,6 @@ class PageGenerateMatrix(QWizardPage):
         self.model.rows = int(settings["rows"])
         self.model.cols = int(settings["cols"])
         self.model.fill_plates = bool(settings["fill_plates"])
-        self.model.randomize_order = bool(settings["randomize_order"])
         self.model.include_replicates = bool(settings["include_replicates"])
         self.model.replicate_percent = int(settings["replicate_percent"])
         self.model.include_error = bool(settings["include_error"])
@@ -530,7 +526,6 @@ class PageGenerateMatrix(QWizardPage):
                     fill_plates=bool(self.model.fill_plates),
                     include_error=bool(self.model.include_error),
                     error_percent=int(self.model.error_percent),
-                    randomize_order=bool(self.model.randomize_order),
                 ))
 
                 scenario_lookup = defaultdict(list)
@@ -616,6 +611,12 @@ class PageGenerateMatrix(QWizardPage):
             write_excel(output_path, {"slice_records": workbook_rows})
             written_files.append(str(output_path))
 
+            if self.model.include_error:
+                err_rows = apply_error(workbook_rows, int(getattr(self.model, "error_percent", 0) or 0))
+                err_output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}_err.xlsx"
+                write_excel(err_output_path, {"slice_records": err_rows})
+                written_files.append(str(err_output_path))
+
         final_rows = sorted(
             [row for row in export_rows if row.get("ID") is not None],
             key=lambda row: str(row.get("ID", "")),
@@ -655,7 +656,6 @@ class PageGenerateMatrix(QWizardPage):
 
         self.model.plate_rows = rows
         self.model.plate_cols = cols
-        self.model.randomize_design = self.chk_randomize.isChecked()
         self.model.fill_to_full_plates = self.checkbox_fill_full.isChecked()
 
         #print("DEBUG: NEXT pressed")
