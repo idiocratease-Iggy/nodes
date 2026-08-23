@@ -123,7 +123,9 @@ def build_layout_reference_table(
 
     table: List[dict] = []
 
-    # 4) Build rows
+    # 4) Build rows for a single slice scenario.
+    # Each call to this function represents one independent plate layout, so the
+    # numbering and well addressing must restart from 1 / A1 for that scenario.
     for exp_index in range(total_experiments):
         if free_format:
             plate_number = 1
@@ -134,7 +136,7 @@ def build_layout_reference_table(
             plate_number = (exp_index // wells_per_plate) + 1
             well_index = exp_index % wells_per_plate
             well_address = fixed_wells[well_index]
-            block_number = plate_number
+            block_number = 1
             origin_plate_ref = (
                 f"Plate{plate_number}.{well_address}"
                 if exp_index < base_experiments

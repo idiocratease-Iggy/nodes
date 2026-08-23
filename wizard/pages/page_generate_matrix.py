@@ -508,39 +508,43 @@ class PageGenerateMatrix(QWizardPage):
         settings = self._get_layout_settings()
         self._apply_layout_reference_settings(settings)
 
-        all_slice_rows = []
-        for rows in layer.get("slice_arrays", {}).values():
-            all_slice_rows.extend(rows)
-
-        mixture_ids = sorted({str(row.get("mixture_id")) for row in all_slice_rows if row.get("mixture_id")})
-
+        metadata_lookup_by_scenario = defaultdict(dict)
         if layout_ref is not None:
-            metadata_rows = list(layout_ref.build_layout_reference_table(
-                mixture_ids=mixture_ids,
-                slice_count=int(self.model.slice_count),
-                free_format=bool(self.model.free_format),
-                plate_format=str(self.model.plate_format),
-                rows=int(self.model.rows),
-                cols=int(self.model.cols),
-                include_replicates=bool(self.model.include_replicates),
-                replicate_percent=int(self.model.replicate_percent),
-                fill_plates=bool(self.model.fill_plates),
-                include_error=bool(self.model.include_error),
-                error_percent=int(self.model.error_percent),
-                randomize_order=bool(self.model.randomize_order),
-            ))
-            metadata_lookup = defaultdict(list)
-            for metadata_row in metadata_rows:
-                mixture_id = metadata_row.get("mixture_id")
-                slice_number = metadata_row.get("slice_number")
-                if mixture_id and slice_number is not None:
-                    metadata_lookup[(str(mixture_id), int(slice_number))].append(metadata_row)
-        else:
-            metadata_lookup = defaultdict(list)
+            for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
+                scenario_slice_count = int(scenario_name.split("_")[-1]) if scenario_name else 0
+                scenario_mixture_ids = []
+                for row in rows:
+                    mixture_id = row.get("mixture_id")
+                    if mixture_id is not None and str(mixture_id) not in scenario_mixture_ids:
+                        scenario_mixture_ids.append(str(mixture_id))
+
+                metadata_rows = list(layout_ref.build_layout_reference_table(
+                    mixture_ids=scenario_mixture_ids,
+                    slice_count=scenario_slice_count,
+                    free_format=bool(self.model.free_format),
+                    plate_format=str(self.model.plate_format),
+                    rows=int(self.model.rows),
+                    cols=int(self.model.cols),
+                    include_replicates=bool(self.model.include_replicates),
+                    replicate_percent=int(self.model.replicate_percent),
+                    fill_plates=bool(self.model.fill_plates),
+                    include_error=bool(self.model.include_error),
+                    error_percent=int(self.model.error_percent),
+                    randomize_order=bool(self.model.randomize_order),
+                ))
+
+                scenario_lookup = defaultdict(list)
+                for metadata_row in metadata_rows:
+                    mixture_id = metadata_row.get("mixture_id")
+                    slice_number = metadata_row.get("slice_number")
+                    if mixture_id and slice_number is not None:
+                        scenario_lookup[(str(mixture_id), int(slice_number))].append(metadata_row)
+                metadata_lookup_by_scenario[scenario_slice_count] = scenario_lookup
 
         export_rows = []
         for scenario_name, rows in sorted(layer.get("slice_arrays", {}).items()):
             slice_count = int(scenario_name.split("_")[-1]) if scenario_name else 0
+            scenario_metadata = metadata_lookup_by_scenario.get(slice_count, defaultdict(list))
             for row in rows:
                 anchor = anchors_by_mixture.get(row.get("mixture_id"), {})
                 x_c = row.get("Xc", []) or anchor.get("Xc", [])
@@ -563,7 +567,7 @@ class PageGenerateMatrix(QWizardPage):
                 row_data["slice_index"] = row.get("slice_index")
 
                 key = (str(row.get("mixture_id")), int(row.get("slice_index", 1)))
-                matching_metadata = metadata_lookup.get(key, [])
+                matching_metadata = scenario_metadata.get(key, [])
                 if not matching_metadata:
                     matching_metadata = [{
                         "id": f"{row.get('mixture_id') or 'UNKNOWN'}_S{row.get('slice_index', 1):02d}",
