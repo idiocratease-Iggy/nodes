@@ -117,14 +117,6 @@ class PagePhysChem(QWizardPage):
         slice_layout.addWidget(self.spin_slices)
         multi_layout.addLayout(slice_layout)
 
-        variance_layout = QHBoxLayout()
-        variance_layout.addWidget(QLabel("Stochastic Variance Factor [%]:"))
-        self.spin_variance = QSpinBox()
-        self.spin_variance.setRange(0, 100)
-        self.spin_variance.setValue(self.model.modulation_percent)
-        variance_layout.addWidget(self.spin_variance)
-        multi_layout.addLayout(variance_layout)
-
         sys_layout = QHBoxLayout()
         sys_layout.addWidget(QLabel("Number of unique mixture:"))
         self.spin_systems = QSpinBox()
@@ -142,6 +134,14 @@ class PagePhysChem(QWizardPage):
         self.spin_addition.setValue(min(getattr(self.model, "max_addition", 0), max_addition_allowed))
         addition_layout.addWidget(self.spin_addition)
         multi_layout.addLayout(addition_layout)
+
+        variance_layout = QHBoxLayout()
+        variance_layout.addWidget(QLabel("Stochastic Variance Factor [%]:"))
+        self.spin_variance = QSpinBox()
+        self.spin_variance.setRange(0, 100)
+        self.spin_variance.setValue(self.model.modulation_percent)
+        variance_layout.addWidget(self.spin_variance)
+        multi_layout.addLayout(variance_layout)
 
         tm_layout = QHBoxLayout()
         tm_layout.addWidget(QLabel("Base melting point:"))

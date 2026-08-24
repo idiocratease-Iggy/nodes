@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import (
     QWidget, QPushButton, QMessageBox, QSizePolicy,
     QFileDialog, QWizard
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QFont
 import json
 import os
@@ -38,7 +38,7 @@ from pathlib import Path
 from models.multxeu_model import MultXeuModel
 from mixture_generator import generate_mixture_set
 from input_writer import write_json
-from error import apply_error
+from models.error import apply_error
 from multx_slicing_engine.multi_mixture_harness import (
     run_multi_mixture_harness_from_json,
     run_multi_mixture_harness_from_gui,
@@ -263,6 +263,25 @@ class PageGenerateMatrix(QWizardPage):
 
         self.btn_write = QPushButton("Write Excel File")
         self.btn_write.setMinimumWidth(150)
+        self.btn_write.setStyleSheet(""
+            "QPushButton {"
+            "   background-color: #2b7de9;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "   padding: 6px 12px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #2468c8;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #1d4f9f;"
+            "}"
+            "QPushButton:disabled {"
+            "   background-color: #6d8dbd;"
+            "   color: #e9eefc;"
+            "}"
+            "")
         meta_layout.addWidget(self.btn_write)
         meta_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
@@ -581,6 +600,22 @@ class PageGenerateMatrix(QWizardPage):
 
                 for metadata_row in matching_metadata:
                     export_rows.append(self._merge_layout_metadata(metadata_row, row_data, settings))
+
+        status_rank = {
+            "Base": 0,
+            "Replicate": 1,
+            "Extra replicate (plate filling)": 2,
+        }
+        export_rows.sort(
+            key=lambda row: (
+                status_rank.get(str(row.get("replicate_status", "")), 99),
+                str(row.get("mixture_id", "")),
+                int(row.get("slice_number", 0) or 0),
+                str(row.get("origin_id", row.get("id", ""))),
+                str(row.get("id", "")),
+                str(row.get("well_address", "")),
+            )
+        )
         return export_rows
 
     def write_matrix_layer_exports(self, layer=None, output_dir=None):
@@ -601,6 +636,18 @@ class PageGenerateMatrix(QWizardPage):
             if not rows_for_slice:
                 continue
 
+            rows_for_slice = sorted(
+                rows_for_slice,
+                key=lambda row: (
+                    {"Base": 0, "Replicate": 1, "Extra replicate (plate filling)": 2}.get(str(row.get("replicate_status", "")), 99),
+                    str(row.get("mixture_id", "")),
+                    int(row.get("slice_number", 0) or 0),
+                    str(row.get("origin_id", row.get("id", ""))),
+                    str(row.get("id", "")),
+                    str(row.get("well_address", "")),
+                )
+            )
+
             headers = list(rows_for_slice[0].keys())
             workbook_rows = []
             for row in rows_for_slice:
@@ -612,8 +659,10 @@ class PageGenerateMatrix(QWizardPage):
             written_files.append(str(output_path))
 
             if self.model.include_error:
-                err_rows = apply_error(workbook_rows, int(getattr(self.model, "error_percent", 0) or 0))
-                err_output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}_err.xlsx"
+                error_percent = int(getattr(self.model, "error_percent", 0) or 0)
+                err_rows = apply_error(workbook_rows, error_percent)
+                err_suffix = f"_err{error_percent}pc"
+                err_output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}{err_suffix}.xlsx"
                 write_excel(err_output_path, {"slice_records": err_rows})
                 written_files.append(str(err_output_path))
 
@@ -632,9 +681,35 @@ class PageGenerateMatrix(QWizardPage):
         return written_files
 
     def write_excel_files(self):
-        if not getattr(self.model, "physchem_matrix", None) and not getattr(self.model, "loaded_json_path", None):
-            self.generate_mixtures()
-        self.validatePage()
+        original_text = self.btn_write.text()
+        original_style = self.btn_write.styleSheet()
+        self.btn_write.setEnabled(False)
+        self.btn_write.setText("Writing...")
+        self.btn_write.setStyleSheet(
+            "QPushButton {"
+            "   background-color: #2ca75f;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "   padding: 6px 12px;"
+            "}"
+            "QPushButton:disabled {"
+            "   background-color: #4ea66d;"
+            "   color: #f0fff7;"
+            "}"
+        )
+
+        try:
+            if not getattr(self.model, "physchem_matrix", None) and not getattr(self.model, "loaded_json_path", None):
+                self.generate_mixtures()
+            self.validatePage()
+        finally:
+            QTimer.singleShot(450, lambda: self._restore_write_button_state(original_text, original_style))
+
+    def _restore_write_button_state(self, original_text, original_style):
+        self.btn_write.setEnabled(True)
+        self.btn_write.setText(original_text)
+        self.btn_write.setStyleSheet(original_style)
 
     # ---------------------------------------------------------
     # Save plate metadata into model (unchanged)

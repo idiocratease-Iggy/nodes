@@ -4,11 +4,11 @@ from unittest.mock import patch
 from models.layout_reference_table import build_layout_reference_table
 
 
-def build_export_paths(timestamp: str, slice_count: int, include_error: bool):
+def build_export_paths(timestamp: str, slice_count: int, include_error: bool, error_percent: int = 5):
     normal_path = f"{timestamp}_Vol{slice_count:02d}.xlsx"
     if not include_error:
         return [normal_path]
-    return [normal_path, f"{timestamp}_Vol{slice_count:02d}_err.xlsx"]
+    return [normal_path, f"{timestamp}_Vol{slice_count:02d}_err{error_percent}pc.xlsx"]
 
 
 def test_build_layout_reference_table_orders_replicates_after_base_then_fill_plates():
@@ -43,11 +43,11 @@ def test_build_layout_reference_table_orders_replicates_after_base_then_fill_pla
 
 def test_build_export_paths_adds_err_suffix_only_when_error_export_is_requested():
     assert build_export_paths("260823_2255", 1, False) == ["260823_2255_Vol01.xlsx"]
-    assert build_export_paths("260823_2255", 1, True) == [
+    assert build_export_paths("260823_2255", 1, True, 2) == [
         "260823_2255_Vol01.xlsx",
-        "260823_2255_Vol01_err.xlsx",
+        "260823_2255_Vol01_err2pc.xlsx",
     ]
-    assert build_export_paths("260823_2255", 2, True) == [
+    assert build_export_paths("260823_2255", 2, True, 5) == [
         "260823_2255_Vol02.xlsx",
-        "260823_2255_Vol02_err.xlsx",
+        "260823_2255_Vol02_err5pc.xlsx",
     ]

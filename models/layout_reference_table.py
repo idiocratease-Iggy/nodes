@@ -72,9 +72,10 @@ def sort_layout_rows(rows: List[dict]) -> List[dict]:
         rows,
         key=lambda r: (
             status_rank(r),
-            str(r.get("id", "")),
             str(r.get("mixture_id", "")),
             int(r.get("slice_number", 0) or 0),
+            str(r.get("origin_id", r.get("id", ""))),
+            str(r.get("id", "")),
             str(r.get("well_address", "")),
         ),
     )

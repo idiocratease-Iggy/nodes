@@ -27,11 +27,22 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def resource_path(path):
     return os.path.join(BASE_DIR, path)
 
 
-def main():
+def parse_solver(argv=None):
+    args = sys.argv[1:] if argv is None else list(argv)
+    if "--halley" in args:
+        return "halley"
+    return "vba"
+
+
+def main(argv=None):
+    solver = parse_solver(argv)
+    os.environ["MULTXEU_SOLVER"] = solver
+
     app = QApplication(sys.argv)
 
     # Load stylesheet and icon (optional)
@@ -50,7 +61,6 @@ def main():
     else:
         pass
 
-    # ⭐ IMPORTANT: import the correct wizard controller
     from wizard.wizard_controller import WizardController
 
     wizard = WizardController()
@@ -58,5 +68,6 @@ def main():
 
     sys.exit(app.exec())
 
+
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
