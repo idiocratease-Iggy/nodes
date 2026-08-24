@@ -5,7 +5,7 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
     QPushButton, QSpinBox, QCheckBox, QWidget, QSizePolicy, QTextEdit,
-    QFileDialog, QRadioButton, QWizard
+    QFileDialog, QRadioButton, QWizard, QToolButton, QMessageBox
 )
 from PyQt6.QtCore import Qt
 from gui_main import run_gui
@@ -43,6 +43,36 @@ class PlotPopup(QWidget):
 # Page 1 — PhysChem Generator
 # ---------------------------------------------------------
 class PagePhysChem(QWizardPage):
+    @staticmethod
+    def _make_help_button(summary: str, parent=None):
+        button = QToolButton(parent)
+        button.setText("?")
+        button.setFixedSize(22, 22)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setToolTip(summary)
+        button.setWhatsThis(summary)
+        button.setStyleSheet(
+            """
+            QToolButton {
+                border: 1px solid rgba(132, 141, 155, 0.45);
+                border-radius: 11px;
+                background: transparent;
+                color: rgba(58, 67, 81, 0.75);
+                font-weight: bold;
+                padding: 0;
+            }
+            QToolButton:hover {
+                background: rgba(118, 144, 214, 0.10);
+                border-color: rgba(87, 120, 210, 0.75);
+                color: rgba(38, 55, 89, 0.95);
+            }
+            """
+        )
+        button.clicked.connect(
+            lambda: QMessageBox.information(parent or button, "Help", summary)
+        )
+        return button
+
     def __init__(self, model: MultXeuModel):
         super().__init__()
         self.model = model
@@ -66,6 +96,11 @@ class PagePhysChem(QWizardPage):
         self.spin_ncomp.setValue(self.model.n_components)
         self.spin_ncomp.valueChanged.connect(self._sync_max_addition_spin)
         comp_layout.addWidget(self.spin_ncomp)
+        comp_layout.addWidget(
+            self._make_help_button(
+                "Number of components in the starting mixture(s)."
+            )
+        )
         single_layout.addLayout(comp_layout)
 
         main_layout2 = QHBoxLayout()
@@ -74,6 +109,11 @@ class PagePhysChem(QWizardPage):
         self.spin_main_level.setRange(0, 100)
         self.spin_main_level.setValue(self.model.main_component_level)
         main_layout2.addWidget(self.spin_main_level)
+        main_layout2.addWidget(
+            self._make_help_button(
+                "Sets a base value for a main component."
+            )
+        )
         single_layout.addLayout(main_layout2)
 
         plot_buttons_layout = QHBoxLayout()
@@ -115,6 +155,11 @@ class PagePhysChem(QWizardPage):
         self.spin_slices.setRange(1, 10)
         self.spin_slices.setValue(self.model.max_slices)
         slice_layout.addWidget(self.spin_slices)
+        slice_layout.addWidget(
+            self._make_help_button(
+                "Upper limit for different solvent volumes applied to each mixture (more solvents → more data → more accurate CRYSS prediction)."
+            )
+        )
         multi_layout.addLayout(slice_layout)
 
         sys_layout = QHBoxLayout()
@@ -124,6 +169,11 @@ class PagePhysChem(QWizardPage):
         self.spin_systems.setValue(self.model.num_systems)
         self.spin_systems.valueChanged.connect(self._sync_model_state)
         sys_layout.addWidget(self.spin_systems)
+        sys_layout.addWidget(
+            self._make_help_button(
+                "Number of unique mixture configurations to generate. This increases diversity of model data set."
+            )
+        )
         multi_layout.addLayout(sys_layout)
 
         addition_layout = QHBoxLayout()
@@ -133,6 +183,11 @@ class PagePhysChem(QWizardPage):
         self.spin_addition.setRange(0, max_addition_allowed)
         self.spin_addition.setValue(min(getattr(self.model, "max_addition", 0), max_addition_allowed))
         addition_layout.addWidget(self.spin_addition)
+        addition_layout.addWidget(
+            self._make_help_button(
+                "Think of this as allowing racemic compounds or related 1:1 addition compounds; distorts eutects."
+            )
+        )
         multi_layout.addLayout(addition_layout)
 
         variance_layout = QHBoxLayout()
@@ -141,6 +196,11 @@ class PagePhysChem(QWizardPage):
         self.spin_variance.setRange(0, 100)
         self.spin_variance.setValue(self.model.modulation_percent)
         variance_layout.addWidget(self.spin_variance)
+        variance_layout.addWidget(
+            self._make_help_button(
+                "This drives gaussian diversity of the base PhysChem parameters; percentage translates to 1σ."
+            )
+        )
         multi_layout.addLayout(variance_layout)
 
         tm_layout = QHBoxLayout()
@@ -149,6 +209,11 @@ class PagePhysChem(QWizardPage):
         self.spin_tm_base.setRange(0, 500)
         self.spin_tm_base.setValue(130)
         tm_layout.addWidget(self.spin_tm_base)
+        tm_layout.addWidget(
+            self._make_help_button(
+                "Baseline melting point for PhysChem data set; ΔHf values are correlated and subject to gaussian modulation."
+            )
+        )
         multi_layout.addLayout(tm_layout)
 
 

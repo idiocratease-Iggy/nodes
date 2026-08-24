@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QWizardPage, QVBoxLayout, QHBoxLayout, QLabel,
     QGroupBox, QRadioButton, QSpinBox, QCheckBox,
     QWidget, QPushButton, QMessageBox, QSizePolicy,
-    QFileDialog, QWizard
+    QFileDialog, QWizard, QToolButton
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QFont
@@ -136,6 +136,36 @@ class PlatePreview(QWidget):
 # Page 2 — Generate Experimental Matrix
 # ---------------------------------------------------------
 class PageGenerateMatrix(QWizardPage):
+    @staticmethod
+    def _make_help_button(summary: str, parent=None):
+        button = QToolButton(parent)
+        button.setText("?")
+        button.setFixedSize(22, 22)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setToolTip(summary)
+        button.setWhatsThis(summary)
+        button.setStyleSheet(
+            """
+            QToolButton {
+                border: 1px solid rgba(132, 141, 155, 0.45);
+                border-radius: 11px;
+                background: transparent;
+                color: rgba(58, 67, 81, 0.75);
+                font-weight: bold;
+                padding: 0;
+            }
+            QToolButton:hover {
+                background: rgba(118, 144, 214, 0.10);
+                border-color: rgba(87, 120, 210, 0.75);
+                color: rgba(38, 55, 89, 0.95);
+            }
+            """
+        )
+        button.clicked.connect(
+            lambda: QMessageBox.information(parent or button, "Help", summary)
+        )
+        return button
+
     def __init__(self, model: MultXeuModel):
         super().__init__()
         self.model = model
@@ -186,8 +216,10 @@ class PageGenerateMatrix(QWizardPage):
         free_layout = QHBoxLayout()
         free_layout.addWidget(QLabel("Rows:"))
         free_layout.addWidget(self.spin_rows)
+        free_layout.addWidget(self._make_help_button("Number of rows in the plate layout. This controls the vertical count of wells in the free-format plate."))
         free_layout.addWidget(QLabel("Cols:"))
         free_layout.addWidget(self.spin_cols)
+        free_layout.addWidget(self._make_help_button("Number of columns in the plate layout. This controls the horizontal count of wells in the free-format plate."))
 
         left_column.addWidget(self.rb_4x3)
         left_column.addWidget(self.rb_3x5)
@@ -214,52 +246,98 @@ class PageGenerateMatrix(QWizardPage):
         left_layout.addWidget(format_group)
 
         # -----------------------------------------------------
-        # Lower options: matrix behavior, replicates, and analytical error
+        # Lower options: plate fill/replicates and analytical error
         # -----------------------------------------------------
-        options_group = QGroupBox("Experimental Options")
+        options_group = QGroupBox("Replicates")
         options_layout = QVBoxLayout()
+        options_layout.setSpacing(8)
+
+        repl_row = QHBoxLayout()
+        self.chk_repl = QCheckBox("Incl. replicates")
+        repl_row.addWidget(self.chk_repl)
+        repl_row.addWidget(
+            self._make_help_button(
+                "Simulates replicates; useful for checking CRYSS data import parsing"
+            )
+        )
+        repl_row.addStretch()
+        options_layout.addLayout(repl_row)
+
+        repl_pct_row = QHBoxLayout()
+        repl_pct_row.addWidget(QLabel("Replicate %:"))
+        self.spin_repl = QSpinBox()
+        self.spin_repl.setRange(0, 100)
+        self.spin_repl.setSingleStep(5)
+        self.spin_repl.setValue(0)
+        self.spin_repl.setMinimumWidth(70)
+        self.spin_repl.setMaximumWidth(70)
+        repl_pct_row.addWidget(self.spin_repl)
+        repl_pct_row.addWidget(
+            self._make_help_button(
+                "Percentage of wells to be repeated as replicate measurements."
+            )
+        )
+        repl_pct_row.addStretch()
+        options_layout.addLayout(repl_pct_row)
+
+        fill_row = QHBoxLayout()
         self.checkbox_fill_full = QCheckBox("Fill plates")
-        options_layout.addWidget(self.checkbox_fill_full)
+        fill_row.addWidget(self.checkbox_fill_full)
+        fill_row.addWidget(
+            self._make_help_button(
+                "For convenience; automatically generates full reactor array."
+            )
+        )
+        fill_row.addStretch()
+        options_layout.addLayout(fill_row)
+
         options_group.setLayout(options_layout)
         options_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        options_group.setMaximumHeight(150)
+        options_group.setMaximumHeight(200)
 
         meta_layout = QHBoxLayout()
         meta_layout.setContentsMargins(0, 0, 0, 0)
         meta_layout.setSpacing(12)
 
-        # Replicates group
-        repl_group = QGroupBox("Replicates")
-        repl_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        repl_layout = QVBoxLayout()
-        self.chk_repl = QCheckBox("Incl. replicates")
-        self.spin_repl = QSpinBox()
-        self.spin_repl.setRange(0, 100)
-        self.spin_repl.setValue(0)
-        repl_layout.addWidget(self.chk_repl)
-        repl_layout.addWidget(QLabel("Replicate %:"))
-        repl_layout.addWidget(self.spin_repl)
-        repl_group.setLayout(repl_layout)
-        repl_group.setMaximumHeight(150)
-
         # Analytical Error group
         err_group = QGroupBox("Experimental Error")
         err_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         err_layout = QVBoxLayout()
-        self.chk_error = QCheckBox("Incl. noise")
+        err_row = QHBoxLayout()
+        self.chk_error = QCheckBox("Incl. Exp. Error")
+        err_row.addWidget(self.chk_error)
+        err_row.addWidget(
+            self._make_help_button(
+                "Simulates effect of solid contamination of liquors and vice versa; analytical error applied via gaussian model."
+            )
+        )
+        err_row.addStretch()
+        err_layout.addLayout(err_row)
+
+        err_value_row = QHBoxLayout()
+        err_value_row.addWidget(QLabel("Error ± [%]:"))
         self.spin_error = QSpinBox()
         self.spin_error.setRange(1, 10)
         self.spin_error.setValue(5)
-        err_layout.addWidget(self.chk_error)
-        err_layout.addWidget(QLabel("Error ± [%]:"))
-        err_layout.addWidget(self.spin_error)
-        err_group.setLayout(err_layout)
-        err_group.setMaximumHeight(150)
+        self.spin_error.setMinimumWidth(70)
+        self.spin_error.setMaximumWidth(70)
+        err_value_row.addWidget(self.spin_error)
+        err_value_row.addWidget(
+            self._make_help_button(
+                "Drives the cross-contamination logic and gaussian 1σ analytical error."
+            )
+        )
+        err_value_row.addStretch()
+        err_layout.addLayout(err_value_row)
 
-        # Keep the cluster aligned to the left edge while preserving the internal horizontal layout
-        meta_layout.addWidget(options_group)
-        meta_layout.addWidget(repl_group)
-        meta_layout.addWidget(err_group)
+        err_group.setLayout(err_layout)
+        err_group.setMaximumHeight(180)
+
+        # Keep the cluster aligned to the left edge while preserving the internal horizontal layout.
+        # Use a modest stretch ratio instead of hard width constraints so the boxes stay
+        # balanced and the longer Experimental Error text has a little more room.
+        meta_layout.addWidget(options_group, stretch=1)
+        meta_layout.addWidget(err_group, stretch=2)
 
         button_col = QVBoxLayout()
         button_col.setSpacing(8)
@@ -330,9 +408,8 @@ class PageGenerateMatrix(QWizardPage):
         self.model.export_dir = str(DATA_DIR)
 
         # Default plate
-        self.rb_free.setChecked(True)
-        self.enable_free_format()
-        self.update_preview(1, 1)
+        self.rb_6x4.setChecked(True)
+        self.update_preview(4, 6)
 
     def choose_export_dir(self):
         current_dir = self.model.export_dir if getattr(self.model, "export_dir", None) else str(DATA_DIR)
