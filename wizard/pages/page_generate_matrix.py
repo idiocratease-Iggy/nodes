@@ -308,7 +308,7 @@ class PageGenerateMatrix(QWizardPage):
         err_row.addWidget(self.chk_error)
         err_row.addWidget(
             self._make_help_button(
-                "Simulates effect of solid contamination of liquors and vice versa; analytical error applied via gaussian model."
+                "Creates an extra set of excel files with experimental error applied."
             )
         )
         err_row.addStretch()
@@ -318,13 +318,13 @@ class PageGenerateMatrix(QWizardPage):
         err_value_row.addWidget(QLabel("Error ± [%]:"))
         self.spin_error = QSpinBox()
         self.spin_error.setRange(1, 10)
-        self.spin_error.setValue(5)
+        self.spin_error.setValue(2)
         self.spin_error.setMinimumWidth(70)
         self.spin_error.setMaximumWidth(70)
         err_value_row.addWidget(self.spin_error)
         err_value_row.addWidget(
             self._make_help_button(
-                "Drives the cross-contamination logic and gaussian 1σ analytical error."
+                "Drives the cross-contamination logic plus gaussian 1σ analytical error logic."
             )
         )
         err_value_row.addStretch()
