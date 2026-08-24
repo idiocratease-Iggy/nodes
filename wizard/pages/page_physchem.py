@@ -181,13 +181,13 @@ class PagePhysChem(QWizardPage):
         slice_layout.addWidget(self.spin_slices)
         slice_layout.addWidget(
             self._make_help_button(
-                "Upper limit for different solvent volumes applied to each mixture (more solvents → more data → more accurate CRYSS prediction)."
+                "Upper limit for different solvent volumes applied to each mixture; more solvents → more data → more accurate CRYSS prediction."
             )
         )
         multi_layout.addLayout(slice_layout)
 
         sys_layout = QHBoxLayout()
-        sys_layout.addWidget(QLabel("Number of unique mixture:"))
+        sys_layout.addWidget(QLabel("Number of unique mixtures:"))
         self.spin_systems = QSpinBox()
         self.spin_systems.setRange(1, 100)
         self.spin_systems.setValue(self.model.num_systems)
@@ -195,7 +195,7 @@ class PagePhysChem(QWizardPage):
         sys_layout.addWidget(self.spin_systems)
         sys_layout.addWidget(
             self._make_help_button(
-                "Number of unique mixture configurations to generate. This increases diversity of model data set."
+                "Number of unique mixture configurations to generate; this increases diversity of model data set."
             )
         )
         multi_layout.addLayout(sys_layout)
@@ -209,7 +209,7 @@ class PagePhysChem(QWizardPage):
         addition_layout.addWidget(self.spin_addition)
         addition_layout.addWidget(
             self._make_help_button(
-                "Think of this as allowing racemic compounds or related 1:1 addition compounds; distorts eutects."
+                "This allows racemic compounds or related 1:1 addition compounds; effect → distorts eutectics."
             )
         )
         multi_layout.addLayout(addition_layout)

@@ -50,12 +50,23 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+DEFAULT_EXPORT_DIR = Path.home() / "Documents"
+if not DEFAULT_EXPORT_DIR.exists():
+    DEFAULT_EXPORT_DIR = Path.home()
+if not DEFAULT_EXPORT_DIR.exists() or not DEFAULT_EXPORT_DIR.is_dir():
+    DEFAULT_EXPORT_DIR = DATA_DIR
+
+# Internal development switch for workbook exports.
+# Keep this True while the next app is being built against the metadata-rich sheet,
+# then set it to False before the final EXE release to strip the helper columns.
+EXPORT_INCLUDE_METADATA = True  # Set to True for development/debugging, False for final release
+
 MODEL_DIR = ROOT_DIR / "models"
 if str(MODEL_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_DIR))
 
 try:
-    import layout_reference_table as layout_ref
+    import models.layout_reference_table as layout_ref
 except ImportError:  # pragma: no cover
     layout_ref = None
 
@@ -165,6 +176,14 @@ class PageGenerateMatrix(QWizardPage):
             lambda: QMessageBox.information(parent or button, "Help", summary)
         )
         return button
+
+    @staticmethod
+    def _format_export_dir_label(path_value):
+        path = Path(str(path_value)).expanduser()
+        display_name = path.name or str(path)
+        if len(display_name) <= 18:
+            return display_name
+        return f"{display_name[:15]}..."
 
     def __init__(self, model: MultXeuModel):
         super().__init__()
@@ -342,7 +361,8 @@ class PageGenerateMatrix(QWizardPage):
         button_col = QVBoxLayout()
         button_col.setSpacing(8)
 
-        self.btn_export_dir = QPushButton(f"Folder: {Path(DATA_DIR).name}")
+        self.model.export_dir = str(DEFAULT_EXPORT_DIR)
+        self.btn_export_dir = QPushButton(f"Folder: {self._format_export_dir_label(DEFAULT_EXPORT_DIR)}")
         self.btn_export_dir.setMinimumWidth(170)
         self.btn_export_dir.setStyleSheet(
             "QPushButton {"
@@ -362,7 +382,7 @@ class PageGenerateMatrix(QWizardPage):
         self.btn_export_dir.clicked.connect(self.choose_export_dir)
         button_col.addWidget(self.btn_export_dir)
 
-        self.btn_write = QPushButton("Write Excel File")
+        self.btn_write = QPushButton("Write Excel Files")
         self.btn_write.setMinimumWidth(150)
         self.btn_write.setStyleSheet(""
             "QPushButton {"
@@ -405,7 +425,7 @@ class PageGenerateMatrix(QWizardPage):
 
         self.btn_write.clicked.connect(self.write_excel_files)
 
-        self.model.export_dir = str(DATA_DIR)
+        self.model.export_dir = str(DEFAULT_EXPORT_DIR)
 
         # Default plate
         self.rb_6x4.setChecked(True)
@@ -420,7 +440,7 @@ class PageGenerateMatrix(QWizardPage):
         )
         if chosen:
             self.model.export_dir = chosen
-            self.btn_export_dir.setText(f"Folder: {Path(chosen).name}")
+            self.btn_export_dir.setText(f"Folder: {self._format_export_dir_label(chosen)}")
 
     def update_next_button_text(self):
         if self.isFinalPage():
@@ -763,10 +783,26 @@ class PageGenerateMatrix(QWizardPage):
                 )
             )
 
-            workbook_headers = [
-                header for header in rows_for_slice[0].keys()
-                if header not in {"slice_count", "slice_index"}
-            ]
+            metadata_headers = {
+                "id",
+                "origin_id",
+                "origin_plate_ref",
+                "replicate_status",
+                "replicate_index",
+                "plate_number",
+                "well_address",
+                "block_number",
+                "slice_number",
+                "experiment_code",
+            }
+            workbook_headers = []
+            for header in rows_for_slice[0].keys():
+                if header in {"slice_count", "slice_index"}:
+                    continue
+                if header in metadata_headers and not EXPORT_INCLUDE_METADATA:
+                    continue
+                workbook_headers.append(header)
+
             workbook_rows = []
             for row in rows_for_slice:
                 workbook_rows.append({header: row.get(header) for header in workbook_headers})
@@ -790,7 +826,23 @@ class PageGenerateMatrix(QWizardPage):
         )
         final_combined_path = output_dir / "final_combined.xlsx"
         if final_rows:
-            final_headers = list(final_rows[0].keys())
+            metadata_headers = {
+                "id",
+                "origin_id",
+                "origin_plate_ref",
+                "replicate_status",
+                "replicate_index",
+                "plate_number",
+                "well_address",
+                "block_number",
+                "slice_number",
+                "experiment_code",
+            }
+            final_headers = [
+                header for header in final_rows[0].keys()
+                if header not in {"slice_count", "slice_index"}
+                and not (header in metadata_headers and not EXPORT_INCLUDE_METADATA)
+            ]
             final_export = [{header: row.get(header) for header in final_headers} for row in final_rows]
             write_excel(final_combined_path, {"slice_records": final_export})
 
