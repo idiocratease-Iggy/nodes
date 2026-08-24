@@ -94,10 +94,17 @@ def evaluate_at_recovery(state: EutecticPathState,
     # ------------------------------------------------------------
     # 5. Mass balance
     # ------------------------------------------------------------
+    # At the segment boundary, a component can approach zero in both the liquor and
+    # solid split. In that regime the denominator Xsol - Xliq becomes tiny and the
+    # arithmetic is dominated by floating-point jitter rather than physical drift.
+    # We ignore only these near-zero contributions so the aggregate Ks remains
+    # stable without changing the source composition or cascade logic.
     Ks_values = []
     for i in range(len(Xliq)):
         denom = (Xsol[i] - Xliq[i])
-        if abs(denom) < 1e-12:
+        if abs(denom) < 1e-10:
+            continue
+        if abs(Xsol[i]) < 1e-10 and abs(Xliq[i]) < 1e-10:
             continue
         Ks_values.append((state.initial_mixture.X[i] - Xliq[i]) / denom)
 

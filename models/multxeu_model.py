@@ -59,3 +59,6 @@ class MultXeuModel:
 
     # Final Excel-ready experiments
     excel_experiments: list = field(default_factory=list)
+
+    # Output directory for generated Excel files
+    export_dir: str = "data"

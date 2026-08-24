@@ -261,6 +261,29 @@ class PageGenerateMatrix(QWizardPage):
         meta_layout.addWidget(repl_group)
         meta_layout.addWidget(err_group)
 
+        button_col = QVBoxLayout()
+        button_col.setSpacing(8)
+
+        self.btn_export_dir = QPushButton(f"Folder: {Path(DATA_DIR).name}")
+        self.btn_export_dir.setMinimumWidth(170)
+        self.btn_export_dir.setStyleSheet(
+            "QPushButton {"
+            "   background-color: #5a7af5;"
+            "   color: white;"
+            "   border: none;"
+            "   border-radius: 4px;"
+            "   padding: 6px 12px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #4d68db;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #3d54b6;"
+            "}"
+        )
+        self.btn_export_dir.clicked.connect(self.choose_export_dir)
+        button_col.addWidget(self.btn_export_dir)
+
         self.btn_write = QPushButton("Write Excel File")
         self.btn_write.setMinimumWidth(150)
         self.btn_write.setStyleSheet(""
@@ -282,7 +305,9 @@ class PageGenerateMatrix(QWizardPage):
             "   color: #e9eefc;"
             "}"
             "")
-        meta_layout.addWidget(self.btn_write)
+        button_col.addWidget(self.btn_write)
+
+        meta_layout.addLayout(button_col)
         meta_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         left_layout.addLayout(meta_layout)
@@ -302,10 +327,23 @@ class PageGenerateMatrix(QWizardPage):
 
         self.btn_write.clicked.connect(self.write_excel_files)
 
+        self.model.export_dir = str(DATA_DIR)
+
         # Default plate
         self.rb_free.setChecked(True)
         self.enable_free_format()
         self.update_preview(1, 1)
+
+    def choose_export_dir(self):
+        current_dir = self.model.export_dir if getattr(self.model, "export_dir", None) else str(DATA_DIR)
+        chosen = QFileDialog.getExistingDirectory(
+            self,
+            "Select Excel Output Folder",
+            current_dir,
+        )
+        if chosen:
+            self.model.export_dir = chosen
+            self.btn_export_dir.setText(f"Folder: {Path(chosen).name}")
 
     def update_next_button_text(self):
         if self.isFinalPage():
@@ -622,7 +660,7 @@ class PageGenerateMatrix(QWizardPage):
         if layer is None:
             layer = build_matrix_layer(getattr(self.model, "canonical_results", []))
 
-        output_dir = Path(output_dir) if output_dir is not None else DATA_DIR
+        output_dir = Path(output_dir) if output_dir is not None else Path(getattr(self.model, "export_dir", str(DATA_DIR)))
         output_dir.mkdir(parents=True, exist_ok=True)
 
         written_files = []
@@ -759,6 +797,7 @@ class PageGenerateMatrix(QWizardPage):
             self.model.canonical_results = run_multi_mixture_harness_from_gui(matrix)
 
         layer = build_matrix_layer(self.model.canonical_results)
-        self.write_matrix_layer_exports(layer=layer, output_dir=DATA_DIR)
+        export_dir = getattr(self.model, "export_dir", str(DATA_DIR)) or str(DATA_DIR)
+        self.write_matrix_layer_exports(layer=layer, output_dir=export_dir)
 
         return True
