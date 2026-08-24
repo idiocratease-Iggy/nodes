@@ -763,10 +763,13 @@ class PageGenerateMatrix(QWizardPage):
                 )
             )
 
-            headers = list(rows_for_slice[0].keys())
+            workbook_headers = [
+                header for header in rows_for_slice[0].keys()
+                if header not in {"slice_count", "slice_index"}
+            ]
             workbook_rows = []
             for row in rows_for_slice:
-                workbook_rows.append({header: row.get(header) for header in headers})
+                workbook_rows.append({header: row.get(header) for header in workbook_headers})
 
             timestamp = datetime.now().strftime("%y%m%d_%H%M")
             output_path = output_dir / f"{timestamp}_Vol{slice_count:02d}.xlsx"

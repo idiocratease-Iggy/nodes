@@ -84,7 +84,7 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
         ws.cell(2, 1, value="mixture_id")
 
         header_labels = {
-            "mixture_id": "mixture_id",
+            "mixture_id": "Mixture_id",
             "R": "Recovery",
             "RelSolVol": "Rel. Sol. Volume",
             "RelSolVol(Rmax)": "Rel. Sol. Volume @ Rmax",
@@ -146,6 +146,20 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
         for row_idx, row in enumerate(sheet_rows, start=3):
             ws.append([_normalise_value(row.get(h)) for h in headers])
 
+        header_metadata_columns = {
+            "id": 12,
+            "origin_id": 14,
+            "origin_plate_ref": 16,
+            "replicate_status": 18,
+            "replicate_index": 16,
+            "plate_number": 14,
+            "well_address": 16,
+            "block_number": 14,
+            "slice_number": 14,
+            "experiment_code": 22,
+        }
+        metadata_columns = [idx for idx, header in enumerate(headers, start=1) if header in header_metadata_columns]
+
         for row_idx in range(3, ws.max_row + 1):
             for col_idx in range(1, ws.max_column + 1):
                 cell = ws.cell(row_idx, col_idx)
@@ -157,13 +171,30 @@ def write_excel(filename: str | Path, rows: Iterable[Dict[str, Any]] | Mapping[s
                     cell.number_format = "0.000"
                 if col_idx in range(2, metrics_start_col):
                     cell.alignment = Alignment(horizontal="center")
+                if col_idx >= metrics_start_col and col_idx <= metrics_start_col + 3:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                if col_idx in metadata_columns:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
 
         ws.freeze_panes = "A3"
+        metric_widths = {
+            metrics_start_col: 18,
+            metrics_start_col + 1: 20,
+            metrics_start_col + 2: 14,
+            metrics_start_col + 3: 28,
+        }
         for col in range(1, ws.max_column + 1):
-            ws.column_dimensions[get_column_letter(col)].width = 14
+            if col in metric_widths:
+                ws.column_dimensions[get_column_letter(col)].width = metric_widths[col]
+            elif col in metadata_columns:
+                header_name = headers[col - 1]
+                ws.column_dimensions[get_column_letter(col)].width = header_metadata_columns.get(header_name, 14)
+            else:
+                ws.column_dimensions[get_column_letter(col)].width = 14
         for row in ws.iter_rows(min_row=1, max_row=2):
             for cell in row:
                 cell.font = Font(bold=True)
+                cell.alignment = Alignment(horizontal="center", vertical="center")
 
         for row in ws.iter_rows(min_row=1, max_row=2):
             for cell in row:

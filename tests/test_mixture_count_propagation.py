@@ -145,8 +145,20 @@ def test_export_writes_single_sheet_workbooks_with_slice_count_names(tmp_path):
         headers = [cell.value for cell in ws[2]]
         assert headers[0] == "Mixture_id"
         assert headers[1] == "Component 1"
-        assert headers[-2] == "Rmax"
-        assert headers[-1] == "Rel. Sol. Volume @ Rmax"
+        assert headers[7] == "Recovery"
+        assert headers[8] == "Rel. Sol. Volume"
+        assert headers[9] == "Rmax"
+        assert headers[10] == "Rel. Sol. Volume @ Rmax"
+        assert headers[12] == "id"
+        assert headers[13] == "origin_id"
+        assert headers[19] == "block_number"
+        assert headers[20] == "slice_number"
+        assert headers[21] == "experiment_code"
+        assert ws.column_dimensions["M"].width >= 12
+        assert ws.column_dimensions["N"].width >= 13
+        assert ws.column_dimensions["V"].width >= 22
+        assert ws.cell(2, 13).alignment.horizontal == "center"
+        assert ws.cell(3, 13).alignment.horizontal == "center"
 
 
 def test_excel_writer_adds_styled_two_row_headers(tmp_path):
@@ -181,6 +193,15 @@ def test_excel_writer_adds_styled_two_row_headers(tmp_path):
     assert ws.cell(2, 9).value == "Rel. Sol. Volume"
     assert ws.cell(2, 10).value == "Rmax"
     assert ws.cell(2, 11).value == "Rel. Sol. Volume @ Rmax"
+
+    assert ws.column_dimensions["H"].width >= 18
+    assert ws.column_dimensions["I"].width >= 18
+    assert ws.column_dimensions["J"].width >= 14
+    assert ws.column_dimensions["K"].width >= 24
+    assert ws.cell(2, 8).alignment.horizontal == "center"
+    assert ws.cell(2, 9).alignment.horizontal == "center"
+    assert ws.cell(3, 8).alignment.horizontal == "center"
+    assert ws.cell(3, 9).alignment.horizontal == "center"
 
     assert ws.cell(3, 2).number_format == "0.00000%"
     assert ws.cell(3, 8).number_format == "0.00%"
