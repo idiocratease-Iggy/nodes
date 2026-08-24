@@ -112,12 +112,12 @@ def apply_error(rows: Iterable[Dict[str, Any]], error_percent: float) -> List[Di
                 R_new = 0.0
 
             new_row["R"] = R_new
-            print(
-                f"[ERROR MODEL] mixture_id={new_row.get('mixture_id')} "
-                f"slice={new_row.get('slice_number')} "
-                f"R_original={row.get('R')} "
-                f"R_mutated={R_new:.6f}"
-            )
+            #print(
+            #    f"[ERROR MODEL] mixture_id={new_row.get('mixture_id')} "
+            #    f"slice={new_row.get('slice_number')} "
+            #    f"R_original={row.get('R')} "
+            #    f"R_mutated={R_new:.6f}"
+            #)
 
         # -----------------------------
         # Write mutated compositions back

@@ -461,8 +461,8 @@ class PagePhysChem(QWizardPage):
         mixtures = generate_mixture_set(config, num_unique_mixtures=self.spin_systems.value())
         self.model.physchem_matrix = mixtures
         self.model.loaded_json_path = None
-        print("DEBUG: PagePhysChem generate_matrix_data, len =", len(mixtures))
-        print("DEBUG: PagePhysChem model.physchem_matrix set, len =", len(self.model.physchem_matrix))
+        #print("DEBUG: PagePhysChem generate_matrix_data, len =", len(mixtures))
+        #print("DEBUG: PagePhysChem model.physchem_matrix set, len =", len(self.model.physchem_matrix))
         self._refresh_wizard_navigation()
         return mixtures
 
