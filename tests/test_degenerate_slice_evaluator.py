@@ -10,6 +10,41 @@ from multx_slicing_engine.canonical_solvent import compute_relsolvol_from_cascad
 from multx_slicing_engine.canonical_types import EutecticPathState, Node, Segment
 from multx_slicing_engine.evaluate_recovery import evaluate_at_recovery
 from multx_slicing_engine.multi_mixture_harness import run_multi_mixture_harness_from_json
+from mixture_generator import generate_mixture_set
+from input_writer import normalize_composition_vector
+
+
+def test_normalize_composition_vector_enforces_unit_sum_and_rejects_invalid_inputs():
+    assert normalize_composition_vector([0.8, 0.1, 0.1]) == pytest.approx([0.8, 0.1, 0.1])
+    assert normalize_composition_vector([0.8, 0.3, 0.1]) == pytest.approx([2.0 / 3.0, 0.25, 1.0 / 12.0])
+
+    with pytest.raises(ValueError):
+        normalize_composition_vector([-0.1, 1.1])
+
+
+def test_generate_mixture_set_skips_degeneracy_unless_explicitly_enabled(monkeypatch):
+    def fail_if_called(component_props, degeneracy_probability=0.1):
+        raise AssertionError("degeneracy should not run unless explicitly enabled")
+
+    monkeypatch.setattr("mixture_generator.maybe_make_degenerate", fail_if_called)
+
+    config = {
+        "metadata": {
+            "n_components": 4,
+            "main_component_index": 0,
+            "main_component_level": 0.8,
+            "stochastic_variance": 0.1,
+            "max_addition_compounds": 0,
+            "degeneracy_enabled": False,
+        },
+        "physchem_rules": {"tm_base": 130.0, "tm_sd_factor": 1.0, "dh_sd_factor": 1.0},
+        "slicing": {"max_solvent_volumes": 3},
+    }
+
+    mixtures = generate_mixture_set(config, num_unique_mixtures=3)
+
+    assert len(mixtures) == 3
+    assert all(abs(sum(float(c["Xc"]) for c in mix["components"]) - 1.0) < 1e-9 for mix in mixtures)
 
 
 def _make_state(segments):

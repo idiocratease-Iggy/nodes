@@ -72,6 +72,22 @@ def generate_config_id():
     return datetime.now().strftime("%y%m%d")
 
 
+def normalize_composition_vector(values):
+    """Return a finite, non-negative vector that sums to 1 exactly within tolerance."""
+    cleaned = [float(value) for value in values]
+    if not cleaned:
+        raise ValueError("Composition cannot be empty.")
+    if any(not math.isfinite(value) or value < 0.0 for value in cleaned):
+        raise ValueError(f"Composition contains non-finite or negative values: {cleaned}")
+
+    total = sum(cleaned)
+    if total <= 0.0:
+        raise ValueError(f"Composition sum must be positive: {cleaned}")
+    if abs(total - 1.0) > 1e-12:
+        cleaned = [value / total for value in cleaned]
+    return cleaned
+
+
 def generate_composition(params: Params, main_component_level=None,
                         max_addition_compounds=None, stochastic_variance=None,
                         *args, **kwargs):
@@ -122,12 +138,7 @@ def generate_composition(params: Params, main_component_level=None,
         Xc[deg_pair[0]] = avg_val
         Xc[deg_pair[1]] = avg_val
 
-    total = np.sum(Xc)
-    if total > 0:
-        Xc = Xc / total
-    else:
-        Xc = np.ones(n) / n
-
+    Xc = np.asarray(normalize_composition_vector(Xc.tolist()), dtype=float)
     return Xc.tolist(), add_indices
 
 

@@ -1,7 +1,22 @@
 from __future__ import annotations
 
+import math
 from copy import deepcopy
 from typing import Any, Dict, List
+
+
+def _normalize_component_vector(values: List[float]) -> List[float]:
+    cleaned = [float(value) for value in values]
+    if not cleaned:
+        raise ValueError("Composition cannot be empty.")
+    if any(not math.isfinite(value) or value < 0.0 for value in cleaned):
+        raise ValueError(f"Composition contains non-finite or negative values: {cleaned}")
+    total = sum(cleaned)
+    if total <= 0.0:
+        raise ValueError(f"Composition sum must be positive: {cleaned}")
+    if abs(total - 1.0) > 1e-12:
+        cleaned = [value / total for value in cleaned]
+    return cleaned
 
 
 class Mixture:
@@ -44,10 +59,12 @@ class Mixture:
     def _parse_components(data: Dict[str, Any]) -> Dict[str, List[float]]:
         components = data.get("components")
         if isinstance(components, list) and components and all(isinstance(item, dict) for item in components):
-            X = [float(item.get("Xc", item.get("X", 0.0))) for item in components]
+            X = _normalize_component_vector([float(item.get("Xc", item.get("X", 0.0))) for item in components])
             T = [float(item.get("Tm", item.get("T", 0.0))) for item in components]
             DH = [float(item.get("DH", item.get("dH", 0.0))) for item in components]
             modes = [str(item.get("mode", item.get("mode_id", "SVL"))).upper() for item in components]
+            for index, item in enumerate(components):
+                item["Xc"] = X[index]
             return {"components": components, "modes": modes, "T": T, "DH": DH, "X": X}
 
         n_components = int(data.get("n_components") or data.get("metadata", {}).get("n_components") or 1)

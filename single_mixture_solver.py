@@ -1,4 +1,5 @@
-﻿import re
+﻿import math
+import re
 
 from engine.eutectic_path import eutectic_path
 from engine.gradient import GradientEngine
@@ -26,6 +27,22 @@ def component_labels(n_components):
     return [f"Comp{i + 1}" for i in range(n_components)]
 
 
+def _normalize_starting_composition(values):
+    """Renormalize the starting composition before the first eutectic subtraction."""
+    cleaned = [float(value) for value in values]
+    if not cleaned:
+        raise ValueError("Composition cannot be empty.")
+    if any(not math.isfinite(value) or value < 0.0 for value in cleaned):
+        raise ValueError(f"Composition contains non-finite or negative values: {cleaned}")
+
+    total = sum(cleaned)
+    if total <= 0.0:
+        raise ValueError(f"Composition sum must be positive: {cleaned}")
+    if abs(total - 1.0) > 1e-12:
+        cleaned = [value / total for value in cleaned]
+    return cleaned
+
+
 def print_extended_summary(matrix, comp_names):
     header = f"{'Recovery':<10} | " + " | ".join([f"{name:>8}" for name in comp_names]) + f" | {'M2L':>8} | {'RelSolVol':>10}"
     print(header)
@@ -42,6 +59,7 @@ def print_extended_summary(matrix, comp_names):
 
 def _solve_mixture(mix, use_vba: bool = True):
     solver_choice = "vba" if use_vba else "halley"
+    mix.X = _normalize_starting_composition(mix.X)
 
     result = eutectic_path(mix, mix.modes, solver=solver_choice)
     nodes_xeu, nodes_mix = result["cascade"]
@@ -201,10 +219,12 @@ def run_single_mixture(mixture):
     if not components:
         raise ValueError("The supplied mixture has no components to solve.")
 
+    raw_x = [float(component["Xc"]) for component in components]
+    normalized_x = _normalize_starting_composition(raw_x)
     mix = MixtureInput(
         T=[float(component["Tm"]) for component in components],
         DH=[float(component["DH"]) for component in components],
-        X=[float(component["Xc"]) for component in components],
+        X=normalized_x,
         modes=[str(component["mode"]) for component in components],
     )
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any, List, Sequence
 
@@ -336,15 +337,32 @@ def debug_canonical_mapping(raw_cascade: Any, canonical_state: Any) -> None:
     # print("\n=== DEBUG: canonical mapping audit complete ===")
 
 
+def _normalize_starting_composition(values: Sequence[float]) -> List[float]:
+    """Renormalize the starting Xc vector before any eutectic subtraction occurs."""
+    cleaned = [float(value) for value in values]
+    if not cleaned:
+        raise ValueError("Composition cannot be empty.")
+    if any(not math.isfinite(value) or value < 0.0 for value in cleaned):
+        raise ValueError(f"Composition contains non-finite or negative values: {cleaned}")
+
+    total = sum(cleaned)
+    if total <= 0.0:
+        raise ValueError(f"Composition sum must be positive: {cleaned}")
+    if abs(total - 1.0) > 1e-12:
+        cleaned = [value / total for value in cleaned]
+    return cleaned
+
+
 def build_canonical_state(mixture: Any, modes: Sequence[str] | None = None, solver: str = "vba") -> EutecticPathState:
     """Construct a canonical state aligned with test_run.py solvent cascade logic."""
     mixture_obj = _coerce_mixture(mixture)
     mode_list = list(modes) if modes is not None else list(mixture_obj.modes)
+    normalized_x = _normalize_starting_composition(mixture_obj.X)
 
     mix_input = MixtureInput(
         T=list(mixture_obj.T),
         DH=list(mixture_obj.DH),
-        X=list(mixture_obj.X),
+        X=normalized_x,
         case_id=mixture_obj.case_id,
         modes=list(mode_list),
         use_bracket=True,

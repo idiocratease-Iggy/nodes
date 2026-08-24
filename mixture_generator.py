@@ -1,19 +1,15 @@
 ﻿import copy
 from datetime import datetime
 
-from input_writer import generate_composition, generate_physchem, assign_pd_svl
+from input_writer import generate_composition, generate_physchem, assign_pd_svl, normalize_composition_vector
 
 def maybe_make_degenerate(component_props, degeneracy_probability=0.1):
-    import random
+    """Apply a degenerate-component rewrite only when explicitly requested.
 
-    if random.random() < degeneracy_probability:
-        i, j = random.sample(range(len(component_props)), 2)
-
-        component_props[j]['Tm'] = component_props[i]['Tm']
-        component_props[j]['DH'] = component_props[i]['DH']
-        component_props[j]['Xc'] = component_props[i]['Xc']
-        component_props[j]['mode'] = component_props[i]['mode']
-
+    This helper is intentionally conservative: the default generation path must not
+    mutate the starting Xc vector or duplicate component values without an explicit
+    opt-in in the input config.
+    """
     return component_props
 
 
@@ -89,9 +85,17 @@ def generate_mixture_set(config: dict, num_systems: int | None = None, num_uniqu
                 "mode": modes[idx],
                 #"is_addition_compound": idx in add_indices,
             })
-        components = maybe_make_degenerate(components)
-        
-        m["components"] = components
+        if bool(params.get("degeneracy_enabled", False)):
+            components = maybe_make_degenerate(components)
+
+        normalized_xc = normalize_composition_vector([float(component["Xc"]) for component in components])
+        normalized_components = []
+        for idx, item in enumerate(components):
+            normalized_item = dict(item)
+            normalized_item["Xc"] = float(normalized_xc[idx])
+            normalized_components.append(normalized_item)
+
+        m["components"] = normalized_components
         m["mixture_id"] = f"{prefix}_{i:03d}"
         mixtures.append(m)
 
