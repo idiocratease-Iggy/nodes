@@ -28,8 +28,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def resource_path(path):
-    return os.path.join(BASE_DIR, path)
+def resource_path(*parts):
+    return os.path.join(BASE_DIR, *parts)
 
 
 def parse_solver(argv=None):
@@ -47,7 +47,7 @@ def main(argv=None):
 
     # Load stylesheet and icon (optional)
     stylesheet_path = resource_path("styles.qss")
-    icon_path = resource_path("nodes.ico")
+    icon_path = resource_path("icons", "nodes.ico")
 
     app.setStyle("Fusion")
 

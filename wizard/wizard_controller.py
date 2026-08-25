@@ -34,7 +34,7 @@ class WizardController(QWizard):
     def __init__(self):
         super().__init__()
 
-        icon_path = Path(__file__).resolve().parent.parent / "nodes.ico"
+        icon_path = Path(__file__).resolve().parent.parent / "icons" / "nodes.ico"
         if icon_path.exists():
             icon = QIcon(str(icon_path))
             self.setWindowIcon(icon)

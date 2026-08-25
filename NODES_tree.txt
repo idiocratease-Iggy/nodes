@@ -1,0 +1,57 @@
+Folder PATH listing for volume My Book Duo
+Volume serial number is 0000001F 9402:9DAA
+I:.
+¦   gui_main.py
+¦   input_writer.py
+¦   main.py
+¦   main.spec
+¦   mixture_generator.py
+¦   mixture_input.py
+¦   nodes.ico
+¦   NODES_tree.txt
+¦   single_mixture_solver.py
+¦   styles.qss
+¦   
++---04 NODES App
++---engine
+¦       cascade.py
+¦       eutectic_path.py
+¦       gradient.py
+¦       recovery.py
+¦       solvent_gradient.py
+¦       xeu.py
+¦       
++---models
+¦       error.py
+¦       layout_reference_table.py
+¦       multxeu_model.py
+¦       
++---multx_slicing_engine
+¦       canonical_eutectic.py
+¦       canonical_gradients.py
+¦       canonical_solvent.py
+¦       canonical_types.py
+¦       evaluate_recovery.py
+¦       excel_writer.py
+¦       experiment_builder.py
+¦       gradient_engine.py
+¦       matrix_layer.py
+¦       mixture_loader.py
+¦       multi_mixture_harness.py
+¦       slice_engine.py
+¦       slice_generator.py
+¦       __init__.py
+¦       
++---solvers
+¦       halley.py
+¦       vba.py
+¦       
++---wizard
+    ¦   wizard_controller.py
+    ¦   __init__.py
+    ¦   
+    +---pages
+            page_generate_matrix.py
+            page_physchem.py
+            page_volume_levels.py
+            
