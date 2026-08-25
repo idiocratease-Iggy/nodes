@@ -12,7 +12,7 @@ I:.
 ¦   single_mixture_solver.py
 ¦   styles.qss
 ¦   
-+---04 NODES App
++---
 +---engine
 ¦       cascade.py
 ¦       eutectic_path.py
