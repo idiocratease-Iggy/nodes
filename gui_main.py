@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
         self.impurity_plot = None
         self.solvent_plot = None
 
-        self.setWindowTitle("MultXeu Purification Profile Viewer")
+        self.setWindowTitle("NODES Purification Profile Viewer")
         MainWindow._active_window = self
 
         central = QWidget()
