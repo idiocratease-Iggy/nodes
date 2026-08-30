@@ -58,8 +58,12 @@ if not DEFAULT_EXPORT_DIR.exists() or not DEFAULT_EXPORT_DIR.is_dir():
 
 # Internal development switch for workbook exports.
 # Keep this True while the next app is being built against the metadata-rich sheet,
-# then set it to False before the final EXE release to strip the helper columns.
-EXPORT_INCLUDE_METADATA = True  # Set to True for development/debugging, False for final release
+# then set it to False before the final EXE release to strip most helper columns.
+# A small traceability subset remains visible even in the release build so the sheet
+# still carries the minimum identifiers needed for downstream QA/debugging.
+EXPORT_INCLUDE_METADATA = False  # Set to True for development/debugging, False for final release
+ALWAYS_INCLUDED_METADATA = {"id", "origin_id"}
+PLATE_ONLY_METADATA = {"origin_plate_ref"}
 
 MODEL_DIR = ROOT_DIR / "models"
 if str(MODEL_DIR) not in sys.path:
@@ -795,11 +799,15 @@ class PageGenerateMatrix(QWizardPage):
                 "slice_number",
                 "experiment_code",
             }
+            always_include = set(ALWAYS_INCLUDED_METADATA)
+            if not self.model.free_format:
+                always_include.update(PLATE_ONLY_METADATA)
+
             workbook_headers = []
             for header in rows_for_slice[0].keys():
                 if header in {"slice_count", "slice_index"}:
                     continue
-                if header in metadata_headers and not EXPORT_INCLUDE_METADATA:
+                if header in metadata_headers and not EXPORT_INCLUDE_METADATA and header not in always_include:
                     continue
                 workbook_headers.append(header)
 
@@ -838,10 +846,17 @@ class PageGenerateMatrix(QWizardPage):
                 "slice_number",
                 "experiment_code",
             }
+            always_include = set(ALWAYS_INCLUDED_METADATA)
+            if not self.model.free_format:
+                always_include.update(PLATE_ONLY_METADATA)
             final_headers = [
                 header for header in final_rows[0].keys()
                 if header not in {"slice_count", "slice_index"}
-                and not (header in metadata_headers and not EXPORT_INCLUDE_METADATA)
+                and not (
+                    header in metadata_headers
+                    and not EXPORT_INCLUDE_METADATA
+                    and header not in always_include
+                )
             ]
             final_export = [{header: row.get(header) for header in final_headers} for row in final_rows]
             write_excel(final_combined_path, {"slice_records": final_export})
