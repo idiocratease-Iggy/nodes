@@ -26,7 +26,7 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
-    QHBoxLayout, QSlider, QLabel
+    QHBoxLayout, QSlider, QLabel, QScrollArea
 )
 from PyQt6.QtCore import Qt
 import pyqtgraph as pg
@@ -131,9 +131,20 @@ class MainWindow(QMainWindow):
             self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
             self.setWindowFlags(Qt.WindowType.Widget)
             layout = QVBoxLayout(self)
+            layout.setContentsMargins(0, 0, 0, 0)
             self.label = QLabel()
-            self.label.setStyleSheet("background: rgba(24, 24, 24, 80); color: white; border: 1px solid rgba(255, 255, 255, 80); padding: 6px;")
-            layout.addWidget(self.label)
+            self.label.setWordWrap(True)
+            self.label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+            self.label.setStyleSheet("background: transparent; color: white; border: none; padding: 6px;")
+            self.scroll = QScrollArea()
+            self.scroll.setWidgetResizable(True)
+            self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.scroll.setStyleSheet(
+                "QScrollArea { background: rgba(24, 24, 24, 80); border: 1px solid rgba(255, 255, 255, 80); }"
+                "QScrollArea > QWidget > QWidget { background: transparent; }"
+            )
+            self.scroll.setWidget(self.label)
+            layout.addWidget(self.scroll)
 
         def update_info(self, text):
             self.label.setText(text)
@@ -150,7 +161,11 @@ class MainWindow(QMainWindow):
             super().__init__()
             layout = QVBoxLayout(self)
 
-            self.plot_widget = pg.PlotWidget()
+            class PercentAxis(pg.AxisItem):
+                def tickStrings(self, values, scale, spacing):
+                    return [f"{v * 100:g}" for v in values]
+
+            self.plot_widget = pg.PlotWidget(axisItems={"bottom": PercentAxis(orientation="bottom")})
             self.plot_widget.setTitle(title)
             self.plot_widget.setLabel("bottom", x_label)
             self.plot_widget.setLabel("left", y_label)
@@ -523,7 +538,7 @@ def run_gui(Rmax, composition_profile, solvent_profile, parent=None):
     )
     window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
     window.resize(960, 640)
-    window.setWindowTitle("MultXeu Purification Profile Viewer")
+    window.setWindowTitle("NODES Purification Profile Viewer")
     window.show()
 
     if created_app:
