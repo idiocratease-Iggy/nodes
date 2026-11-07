@@ -70,35 +70,7 @@ def generate_mixture_set(config: dict, num_systems: int | None = None, num_uniqu
             physchem_rules.get("dh_sd_factor", params.get("dh_sd_factor", 1.0)),
         )
 
-        # ---------------------------------------------------------
-        # PD assignment based on max_addition_compounds (probabilistic)
-        # ---------------------------------------------------------
-        max_pd = params.get("max_addition_compounds", 0)
-        pd_probability = 0.25  # or expose via GUI later
-
-        # Start with all SVL
-        modes = ["SVL"] * params["n_components"]
-
-        if max_pd > 0:
-            import random
-
-            # PD cannot be assigned to the main component (index 0)
-            candidate_indices = list(range(1, params["n_components"]))
-
-            # Shuffle candidates for randomness
-            random.shuffle(candidate_indices)
-
-            pd_count = 0
-
-            for idx in candidate_indices:
-                if pd_count >= max_pd:
-                    break
-
-                # probabilistic PD assignment
-                if random.random() < pd_probability:
-                    modes[idx] = "PD"
-                    pd_count += 1
-
+        modes = assign_pd_svl(Xc)
 
         components = []
         for idx in range(params["n_components"]):
