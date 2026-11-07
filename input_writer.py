@@ -188,28 +188,38 @@ def generate_physchem(params: Params, Xc, add_indices=None, tm_base=None,
     return physchem
 
 
-def assign_pd_svl(params: Params, Xc, add_indices=None, pd_probability: float = 0.25):
-    # ---------------------------------------------------------
-    # PD assignment based on max_addition_compounds
-    # ---------------------------------------------------------
-    max_pd = params.get("max_addition_compounds", 0)
+def assign_pd_svl(
+    Xc: list[float] | None,
+    *,
+    rng: random.Random | None = None,
+    max_pd: int | None = None,
+) -> list[str]:
+    """Assign PD to a random count of the lowest-composition components."""
+    if Xc is None:
+        raise ValueError("Xc must be provided to assign PD/SVL modes.")
 
-    # Start with all SVL
-    modes = ["SVL"] * params["n_components"]
+    components = [float(value) for value in Xc]
+    n_components = len(components)
+    if n_components == 0:
+        return []
 
-    if max_pd > 0:
-        import random
+    if rng is None:
+        rng = random.Random()
 
-        # PD cannot be assigned to the main component (index 0)
-        candidate_indices = list(range(1, params["n_components"]))
+    pd_cap = (
+        n_components // 2
+        if max_pd is None
+        else max(0, min(max_pd, n_components // 2))
+    )
+    pd_count = rng.randint(0, pd_cap)
+    lowest_component_indices = sorted(
+        range(n_components), key=lambda index: components[index]
+    )
 
-        # Randomly choose up to max_pd PD components
-        pd_indices = random.sample(candidate_indices, k=min(max_pd, len(candidate_indices)))
-
-        for idx in pd_indices:
-            modes[idx] = "PD"
-
-        return modes
+    modes = ["SVL"] * n_components
+    for index in lowest_component_indices[:pd_count]:
+        modes[index] = "PD"
+    return modes
 
 
 def build_configuration_json(params: Params):
